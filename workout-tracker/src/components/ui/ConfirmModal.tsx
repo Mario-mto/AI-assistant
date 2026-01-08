@@ -20,19 +20,14 @@ export default function ConfirmModal({
   confirmText = 'Confirmer',
   cancelText = 'Annuler',
 }: ConfirmModalProps) {
-  const handleConfirm = () => {
-    onConfirm()
-    onClose()
-  }
-
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={title}>
-      <p className="text-gray-700 mb-6">{message}</p>
+      <p className="text-gray-700 dark:text-gray-300 mb-6">{message}</p>
       <div className="flex gap-3 justify-end">
         <Button variant="secondary" onClick={onClose}>
           {cancelText}
         </Button>
-        <Button variant="danger" onClick={handleConfirm}>
+        <Button variant="danger" onClick={onConfirm}>
           {confirmText}
         </Button>
       </div>

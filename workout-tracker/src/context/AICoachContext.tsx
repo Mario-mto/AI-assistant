@@ -62,7 +62,8 @@ export function AICoachProvider({ children }: { children: ReactNode }) {
       content,
       timestamp: new Date().toISOString(),
     }
-    setMessages([...messages, newMessage])
+    // Utiliser la forme fonctionnelle pour éviter les références stale
+    setMessages((prev) => [...prev, newMessage])
   }
 
   const clearChat = () => {

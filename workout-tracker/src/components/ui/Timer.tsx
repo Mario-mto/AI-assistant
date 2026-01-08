@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 
 interface TimerProps {
   seconds: number
@@ -6,9 +6,65 @@ interface TimerProps {
   autoStart?: boolean
 }
 
+// Fonction pour jouer un son de notification
+const playNotificationSound = () => {
+  try {
+    const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)()
+
+    // Créer un son de "ding" agréable
+    const oscillator = audioContext.createOscillator()
+    const gainNode = audioContext.createGain()
+
+    oscillator.connect(gainNode)
+    gainNode.connect(audioContext.destination)
+
+    oscillator.frequency.setValueAtTime(880, audioContext.currentTime) // La note A5
+    oscillator.type = 'sine'
+
+    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime)
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5)
+
+    oscillator.start(audioContext.currentTime)
+    oscillator.stop(audioContext.currentTime + 0.5)
+
+    // Deuxième note pour un effet "ding-dong"
+    setTimeout(() => {
+      const osc2 = audioContext.createOscillator()
+      const gain2 = audioContext.createGain()
+
+      osc2.connect(gain2)
+      gain2.connect(audioContext.destination)
+
+      osc2.frequency.setValueAtTime(1320, audioContext.currentTime) // La note E6
+      osc2.type = 'sine'
+
+      gain2.gain.setValueAtTime(0.3, audioContext.currentTime)
+      gain2.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5)
+
+      osc2.start(audioContext.currentTime)
+      osc2.stop(audioContext.currentTime + 0.5)
+    }, 150)
+  } catch (error) {
+    console.log('Audio non supporté:', error)
+  }
+}
+
+// Fonction pour vibrer (mobile)
+const vibrateDevice = () => {
+  try {
+    if ('vibrate' in navigator) {
+      // Pattern: vibration 200ms, pause 100ms, vibration 200ms
+      navigator.vibrate([200, 100, 200])
+    }
+  } catch (error) {
+    console.log('Vibration non supportée:', error)
+  }
+}
+
 export default function Timer({ seconds, onComplete, autoStart = false }: TimerProps) {
   const [timeLeft, setTimeLeft] = useState(seconds)
   const [isRunning, setIsRunning] = useState(autoStart)
+  const hasNotified = useRef(false)
 
   // Reset timer quand les secondes changent
   useEffect(() => {

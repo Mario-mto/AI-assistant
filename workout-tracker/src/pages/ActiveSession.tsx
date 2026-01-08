@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useWorkout } from '../context/WorkoutContext'
+import { useAICoach } from '../hooks/useAICoach'
 import { getDefaultReps } from '../utils/defaultReps'
 import Button from '../components/ui/Button'
 import Select from '../components/ui/Select'
@@ -19,6 +20,7 @@ export default function ActiveSession() {
     addSession,
     getLastSession,
   } = useWorkout()
+  const { getLiveCoaching, analyzeCompletedSession, isConfigured, settings } = useAICoach()
 
   // Setup
   const [selectedExerciseId, setSelectedExerciseId] = useState('')
@@ -29,13 +31,49 @@ export default function ActiveSession() {
   const [completedSets, setCompletedSets] = useState<number[]>([])
   const [currentSetIndex, setCurrentSetIndex] = useState(0)
 
-  // Modal de fin
+  // Modals de confirmation
   const [showEndConfirm, setShowEndConfirm] = useState(false)
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false)
+  const [showNoSetsAlert, setShowNoSetsAlert] = useState(false)
+
+  // Coach IA - encouragements
+  const [coachMessage, setCoachMessage] = useState('')
+  const [isLoadingCoach, setIsLoadingCoach] = useState(false)
+  const [sessionFeedback, setSessionFeedback] = useState('')
 
   const selectedExercise = exercises.find((ex) => ex.id === selectedExerciseId)
   const selectedProgram = programs.find((prog) => prog.id === selectedProgramId)
 
   const canStart = selectedExerciseId && selectedProgramId
+
+  // Récupérer un message d'encouragement du coach pendant le repos
+  useEffect(() => {
+    if (sessionState !== 'resting') return
+    if (!isConfigured || !settings.liveCoachingEnabled) return
+    if (!selectedExercise || !selectedProgram) return
+
+    const fetchCoachMessage = async () => {
+      setIsLoadingCoach(true)
+      try {
+        const message = await getLiveCoaching(
+          currentSetIndex + 1,
+          completedSets,
+          selectedExercise.goal,
+          selectedExercise.name,
+          selectedProgram.name
+        )
+        if (message) {
+          setCoachMessage(message)
+        }
+      } catch (error) {
+        console.error('Erreur coaching live:', error)
+      } finally {
+        setIsLoadingCoach(false)
+      }
+    }
+
+    fetchCoachMessage()
+  }, [sessionState, completedSets.length])
 
   const handleStartSession = () => {
     if (!canStart) return
@@ -63,20 +101,44 @@ export default function ActiveSession() {
 
   const handleEndSession = () => {
     if (completedSets.length === 0) {
-      alert('Aucune série complétée. Impossible de terminer la séance.')
+      setShowNoSetsAlert(true)
       return
     }
     setShowEndConfirm(true)
   }
 
-  const handleConfirmEnd = () => {
+  const handleConfirmEnd = async () => {
     if (!selectedExerciseId || !selectedProgramId) return
 
+    // Fermer la modal immédiatement
+    setShowEndConfirm(false)
+
+    // Sauvegarder la séance
     addSession({
       exerciseId: selectedExerciseId,
       programId: selectedProgramId,
       sets: completedSets,
     })
+
+    // Récupérer le feedback du coach si activé
+    if (isConfigured && selectedExercise && selectedProgram) {
+      try {
+        const feedback = await analyzeCompletedSession(
+          selectedExercise.name,
+          selectedProgram.name,
+          completedSets,
+          selectedExercise.goal
+        )
+        if (feedback) {
+          setSessionFeedback(feedback)
+          // Afficher le feedback pendant 5 secondes avant redirection
+          setTimeout(() => navigate('/'), 5000)
+          return
+        }
+      } catch (error) {
+        console.error('Erreur feedback séance:', error)
+      }
+    }
 
     // Redirection vers dashboard
     navigate('/')
@@ -84,10 +146,18 @@ export default function ActiveSession() {
 
   const handleCancelSession = () => {
     if (completedSets.length > 0) {
-      if (!confirm('Abandonner la séance en cours ? Les données seront perdues.')) {
-        return
-      }
+      setShowCancelConfirm(true)
+      return
     }
+    resetSession()
+  }
+
+  const handleConfirmCancel = () => {
+    setShowCancelConfirm(false)
+    resetSession()
+  }
+
+  const resetSession = () => {
     setSessionState('setup')
     setCompletedSets([])
     setCurrentSetIndex(0)
@@ -119,6 +189,37 @@ export default function ActiveSession() {
     value: prog.id,
     label: prog.name,
   }))
+
+  // Écran de feedback de fin de séance
+  if (sessionFeedback) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh]">
+        <Card className="max-w-md text-center bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900/30 dark:to-blue-900/30">
+          <div className="text-6xl mb-4">🎉</div>
+          <h2 className="text-2xl font-bold mb-4 text-green-700 dark:text-green-400">
+            Séance terminée !
+          </h2>
+          <div className="mb-6">
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+              {completedSets.length} série{completedSets.length > 1 ? 's' : ''} • {completedSets.reduce((a, b) => a + b, 0)} reps au total
+            </p>
+          </div>
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-4 mb-4">
+            <div className="flex items-start gap-3">
+              <span className="text-2xl">🤖</span>
+              <div className="text-left">
+                <p className="font-medium text-blue-700 dark:text-blue-300 text-sm mb-1">Feedback du coach</p>
+                <p className="text-gray-700 dark:text-gray-300 text-sm whitespace-pre-wrap">{sessionFeedback}</p>
+              </div>
+            </div>
+          </div>
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            Redirection vers le dashboard dans quelques secondes...
+          </p>
+        </Card>
+      </div>
+    )
+  }
 
   // Affichage conditionnel selon l'état
   if (sessionState === 'setup') {
@@ -206,6 +307,29 @@ export default function ActiveSession() {
           />
         </Card>
 
+        {/* Message du coach IA */}
+        {isConfigured && settings.liveCoachingEnabled && (
+          <Card className="mt-4 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/30 dark:to-purple-900/30 border-blue-200 dark:border-blue-700">
+            <div className="flex items-start gap-3">
+              <span className="text-2xl">🤖</span>
+              <div className="flex-1">
+                <p className="font-medium text-blue-800 dark:text-blue-200 text-sm mb-1">Coach IA</p>
+                {isLoadingCoach ? (
+                  <p className="text-gray-600 dark:text-gray-400 text-sm animate-pulse">
+                    Analyse en cours...
+                  </p>
+                ) : coachMessage ? (
+                  <p className="text-gray-700 dark:text-gray-300">{coachMessage}</p>
+                ) : (
+                  <p className="text-gray-500 dark:text-gray-400 text-sm italic">
+                    Continue comme ça !
+                  </p>
+                )}
+              </div>
+            </div>
+          </Card>
+        )}
+
         <div className="mt-4 flex gap-3">
           <Button variant="secondary" onClick={handleRestComplete} fullWidth>
             Passer le repos
@@ -229,6 +353,27 @@ export default function ActiveSession() {
             ))}
           </div>
         </Card>
+
+        {/* Modal de confirmation fin de séance */}
+        <ConfirmModal
+          isOpen={showEndConfirm}
+          onClose={() => setShowEndConfirm(false)}
+          onConfirm={handleConfirmEnd}
+          title="Terminer la séance"
+          message={`Tu as complété ${completedSets.length} série(s). Veux-tu enregistrer cette séance ?`}
+          confirmText="Enregistrer"
+        />
+
+        {/* Modal de confirmation annulation */}
+        <ConfirmModal
+          isOpen={showCancelConfirm}
+          onClose={() => setShowCancelConfirm(false)}
+          onConfirm={handleConfirmCancel}
+          title="Abandonner la séance"
+          message="Tu as des séries en cours. Abandonner la séance ? Les données seront perdues."
+          confirmText="Abandonner"
+          cancelText="Continuer"
+        />
       </div>
     )
   }
@@ -284,6 +429,28 @@ export default function ActiveSession() {
         title="Terminer la séance"
         message={`Tu as complété ${completedSets.length} série(s). Veux-tu enregistrer cette séance ?`}
         confirmText="Enregistrer"
+      />
+
+      {/* Modal de confirmation annulation */}
+      <ConfirmModal
+        isOpen={showCancelConfirm}
+        onClose={() => setShowCancelConfirm(false)}
+        onConfirm={handleConfirmCancel}
+        title="Abandonner la séance"
+        message="Tu as des séries en cours. Abandonner la séance ? Les données seront perdues."
+        confirmText="Abandonner"
+        cancelText="Continuer"
+      />
+
+      {/* Modal alerte aucune série */}
+      <ConfirmModal
+        isOpen={showNoSetsAlert}
+        onClose={() => setShowNoSetsAlert(false)}
+        onConfirm={() => setShowNoSetsAlert(false)}
+        title="Aucune série"
+        message="Tu n'as complété aucune série. Fais au moins une série avant de terminer la séance."
+        confirmText="Compris"
+        cancelText="Fermer"
       />
     </div>
   )

@@ -1,9 +1,10 @@
 # Session Context - Workout Tracker
 
 ## Session State
-- **Current feature**: Coach IA avec Gemini (Google AI - GRATUIT)
-- **Status**: ✅ Migration OpenAI → Gemini terminée
-- **Date**: 2026-01-07
+- **Current feature**: Coach IA complet avec intégration séance
+- **Current objective**: Coaching live + création auto de programmes
+- **Phase**: Intégration fonctionnalités avancées
+- **Date**: 2026-01-08
 
 ## Completed
 - ✅ Setup projet (Vite + React + TypeScript + Tailwind v3)
@@ -86,6 +87,27 @@
 - ✅ FIXED: Variable program inutilisée dans History
 - ✅ FIXED: TypeScript TS2353 (vibrate option) → retiré de showNotification
 - ✅ FIXED: Noms de modèles Gemini incorrects → testés via API, corrigés (2.5-flash, 2.5-pro, 3-flash-preview)
+- ✅ FIXED: **Erreur Gemini "single turn requests end with a user role"**
+  - **Cause racine** : React setState async → `coach.messages` ne contenait pas le nouveau message user lors de l'appel API
+  - **Solution** :
+    1. `useAICoach.ts` : inclusion explicite du nouveau message dans `messagesWithNew`
+    2. `geminiService.ts` : validations défensives (fusion messages consécutifs, vérification premier/dernier message = user)
+- ✅ FIXED: Scrollbar visible dans textarea du chat → ajout `overflow-hidden`
+
+## New Features (Session 2026-01-08)
+- ✅ **Coaching live pendant les séances** :
+  - Messages d'encouragement du coach IA pendant le temps de repos
+  - Feedback personnalisé à la fin de chaque séance
+  - Écran de feedback avec animation avant redirection
+- ✅ **Contexte enrichi pour Gemini** :
+  - L'IA connaît maintenant l'historique des séances
+  - Stats globales (nb séances, reps total, exercices)
+  - Liste des exercices et programmes configurés
+  - 10 dernières séances avec détails
+- ✅ **Création automatique de programmes** :
+  - Quand le coach suggère un programme, bouton "Créer ce programme"
+  - Crée automatiquement le programme ET les exercices dans le système
+  - Message de confirmation avec lien vers l'onglet Séance
 
 ## Current Issues
 - ⚠️ SÉCURITÉ : Régénérer la clé API Gemini (exposée dans la conversation)
