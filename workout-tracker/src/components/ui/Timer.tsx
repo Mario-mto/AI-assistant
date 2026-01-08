@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef } from 'react'
 
 interface TimerProps {
   seconds: number
@@ -69,6 +69,7 @@ export default function Timer({ seconds, onComplete, autoStart = false }: TimerP
   // Reset timer quand les secondes changent
   useEffect(() => {
     setTimeLeft(seconds)
+    hasNotified.current = false // Reset notification flag
     if (autoStart) {
       setIsRunning(true)
     }
@@ -82,6 +83,12 @@ export default function Timer({ seconds, onComplete, autoStart = false }: TimerP
       setTimeLeft((prev) => {
         if (prev <= 1) {
           setIsRunning(false)
+          // Jouer le son et vibrer quand le timer se termine
+          if (!hasNotified.current) {
+            hasNotified.current = true
+            playNotificationSound()
+            vibrateDevice()
+          }
           onComplete?.()
           return 0
         }
