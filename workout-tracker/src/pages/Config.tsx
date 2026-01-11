@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { useWorkout } from '../context/WorkoutContext'
 import { useTheme } from '../context/ThemeContext'
-import { useNotifications } from '../hooks/useNotifications'
 import type { Exercise, Program } from '../types'
 import Button from '../components/ui/Button'
 import Modal from '../components/ui/Modal'
@@ -27,20 +26,8 @@ export default function Config() {
   } = useWorkout()
 
   const { theme, toggleTheme } = useTheme()
-  const { isEnabled, enableNotifications, disableNotifications } = useNotifications()
 
   const [activeTab, setActiveTab] = useState<Tab>('exercises')
-
-  const handleToggleNotifications = async () => {
-    if (isEnabled) {
-      disableNotifications()
-    } else {
-      const enabled = await enableNotifications()
-      if (!enabled) {
-        alert('Impossible d\'activer les notifications. Vérifiez les paramètres de votre navigateur.')
-      }
-    }
-  }
 
   // États pour les modals exercices
   const [isExerciseModalOpen, setIsExerciseModalOpen] = useState(false)
@@ -89,7 +76,7 @@ export default function Config() {
     setConfirmModal({
       isOpen: true,
       title: 'Supprimer l\'exercice',
-      message: `Êtes-vous sûr de vouloir supprimer "${exercise.name}" ? Cette action est irréversible.`,
+      message: `Etes-vous sur de vouloir supprimer "${exercise.name}" ? Cette action est irreversible.`,
       onConfirm: () => deleteExercise(exercise.id),
     })
   }
@@ -127,83 +114,89 @@ export default function Config() {
     setConfirmModal({
       isOpen: true,
       title: 'Supprimer le programme',
-      message: `Êtes-vous sûr de vouloir supprimer "${program.name}" ? Cette action est irréversible.`,
+      message: `Etes-vous sur de vouloir supprimer "${program.name}" ? Cette action est irreversible.`,
       onConfirm: () => deleteProgram(program.id),
     })
   }
 
   return (
-    <div>
-      <h1 className="text-3xl font-bold mb-6">Configuration</h1>
+    <div className="animate-fade-in">
+      <header className="mb-8">
+        <h1 className="text-3xl font-display font-bold">
+          <span className="gradient-text">Configuration</span>
+        </h1>
+        <p className="text-gray-500 dark:text-gray-400 mt-2">
+          Gere tes exercices et programmes
+        </p>
+      </header>
 
-      {/* Paramètres */}
-      <Card className="mb-6">
-        <h2 className="text-lg font-semibold mb-4">Paramètres</h2>
+      {/* Parametres */}
+      <Card variant="glass" className="mb-6">
+        <h2 className="text-lg font-display font-bold mb-4 flex items-center gap-2">
+          <span className="w-8 h-8 rounded-lg bg-gradient-to-br from-volt-400 to-volt-600 flex items-center justify-center text-white text-sm">
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="12" r="3" />
+              <path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83" />
+            </svg>
+          </span>
+          Parametres
+        </h2>
 
         {/* Dark Mode */}
-        <div className="flex items-center justify-between mb-4 pb-4 border-b border-gray-200 dark:border-gray-700">
-          <div>
-            <p className="font-medium">Thème sombre</p>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              Activer le mode sombre pour réduire la fatigue oculaire
-            </p>
+        <div className="flex items-center justify-between p-4 bg-white/50 dark:bg-white/5 rounded-xl">
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">{theme === 'dark' ? '🌙' : '☀️'}</span>
+            <div>
+              <p className="font-semibold text-gray-800 dark:text-white">Theme sombre</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Reduire la fatigue oculaire
+              </p>
+            </div>
           </div>
           <button
             onClick={toggleTheme}
-            className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors ${
-              theme === 'dark' ? 'bg-blue-600' : 'bg-gray-300'
-            }`}
+            className={`
+              relative w-14 h-8 rounded-full transition-all duration-300
+              ${theme === 'dark'
+                ? 'bg-gradient-to-r from-volt-500 to-volt-600 shadow-[0_0_15px_rgba(168,85,247,0.4)]'
+                : 'bg-gray-300 dark:bg-gray-600'
+              }
+            `}
           >
             <span
-              className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform ${
-                theme === 'dark' ? 'translate-x-7' : 'translate-x-1'
-              }`}
-            />
-          </button>
-        </div>
-
-        {/* Notifications */}
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="font-medium">Rappels de séances</p>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              Recevoir une notification quotidienne à 18h
-            </p>
-          </div>
-          <button
-            onClick={handleToggleNotifications}
-            className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors ${
-              isEnabled ? 'bg-blue-600' : 'bg-gray-300'
-            }`}
-          >
-            <span
-              className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform ${
-                isEnabled ? 'translate-x-7' : 'translate-x-1'
-              }`}
+              className={`
+                absolute top-1 w-6 h-6 rounded-full bg-white shadow-md
+                transition-all duration-300 ease-out
+                ${theme === 'dark' ? 'left-7' : 'left-1'}
+              `}
             />
           </button>
         </div>
       </Card>
 
       {/* Tabs */}
-      <div className="flex gap-2 mb-6 border-b border-gray-200 dark:border-gray-700">
+      <div className="flex gap-2 mb-6">
         <button
           onClick={() => setActiveTab('exercises')}
-          className={`px-4 py-2 font-medium border-b-2 transition-colors ${
-            activeTab === 'exercises'
-              ? 'border-blue-600 dark:border-blue-400 text-blue-600 dark:text-blue-400'
-              : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100'
-          }`}
+          className={`
+            flex-1 px-4 py-3 rounded-xl font-semibold transition-all duration-300
+            ${activeTab === 'exercises'
+              ? 'bg-gradient-to-r from-energy-500 to-energy-600 text-white shadow-energy'
+              : 'glass text-gray-600 dark:text-gray-300 hover:bg-white/80 dark:hover:bg-white/10'
+            }
+          `}
         >
           Exercices ({exercises.length})
         </button>
         <button
           onClick={() => setActiveTab('programs')}
-          className={`px-4 py-2 font-medium border-b-2 transition-colors ${
-            activeTab === 'programs'
-              ? 'border-blue-600 dark:border-blue-400 text-blue-600 dark:text-blue-400'
-              : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100'
-          }`}
+          className={`
+            flex-1 px-4 py-3 rounded-xl font-semibold transition-all duration-300
+            ${activeTab === 'programs'
+              ? 'bg-gradient-to-r from-energy-500 to-energy-600 text-white shadow-energy'
+              : 'glass text-gray-600 dark:text-gray-300 hover:bg-white/80 dark:hover:bg-white/10'
+            }
+          `}
         >
           Programmes ({programs.length})
         </button>
@@ -211,10 +204,12 @@ export default function Config() {
 
       {/* Contenu des tabs */}
       {activeTab === 'exercises' && (
-        <div>
+        <div className="animate-fade-in">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold">Mes exercices</h2>
-            <Button onClick={handleAddExercise}>Ajouter un exercice</Button>
+            <h2 className="text-xl font-display font-bold">Mes exercices</h2>
+            <Button onClick={handleAddExercise} size="sm">
+              + Ajouter
+            </Button>
           </div>
           <ExerciseList
             exercises={exercises}
@@ -225,10 +220,12 @@ export default function Config() {
       )}
 
       {activeTab === 'programs' && (
-        <div>
+        <div className="animate-fade-in">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold">Mes programmes</h2>
-            <Button onClick={handleAddProgram}>Ajouter un programme</Button>
+            <h2 className="text-xl font-display font-bold">Mes programmes</h2>
+            <Button onClick={handleAddProgram} size="sm">
+              + Ajouter
+            </Button>
           </div>
           <ProgramList
             programs={programs}
