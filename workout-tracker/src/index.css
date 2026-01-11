@@ -169,9 +169,11 @@
     background: #22c55e;
   }
 
-  /* Navigation pill */
+  /* Navigation pill - min 44px touch target for iOS */
   .nav-pill {
-    @apply relative flex flex-col items-center justify-center py-2 px-3 rounded-2xl transition-all duration-300;
+    @apply relative flex flex-col items-center justify-center py-2 px-2 rounded-2xl transition-all duration-300;
+    min-width: 44px;
+    min-height: 44px;
   }
 
   .nav-pill.active {
@@ -273,13 +275,22 @@
   .delay-400 { animation-delay: 400ms; }
   .delay-500 { animation-delay: 500ms; }
 
-  /* Safe area padding for mobile */
+  /* Safe area padding for mobile (iPhone notch) */
+  .pt-safe {
+    padding-top: max(1rem, env(safe-area-inset-top));
+  }
+
   .pb-safe {
     padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
   }
 
+  .px-safe {
+    padding-left: max(1rem, env(safe-area-inset-left));
+    padding-right: max(1rem, env(safe-area-inset-right));
+  }
+
   .mb-nav {
-    margin-bottom: calc(5rem + env(safe-area-inset-bottom, 0px));
+    margin-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
   }
 
   /* Touch feedback */

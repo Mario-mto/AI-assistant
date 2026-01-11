@@ -51,9 +51,9 @@ export default function Navigation() {
   const location = useLocation()
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 px-4 pb-safe">
-      <div className="glass rounded-2xl shadow-glass-dark mx-auto max-w-md mb-2">
-        <div className="flex justify-around items-center h-16 px-2">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 px-3 pb-safe">
+      <div className="glass rounded-2xl shadow-glass-dark mx-auto max-w-md mb-1">
+        <div className="flex justify-around items-center h-[4.5rem] px-1">
           {navItems.map((item) => {
             const isActive = location.pathname === item.to
 
