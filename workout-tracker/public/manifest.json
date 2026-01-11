@@ -4,8 +4,8 @@
   "description": "Suivez votre progression musculation avec des programmes personnalisés",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#f9fafb",
-  "theme_color": "#2563eb",
+  "background_color": "#0f0f23",
+  "theme_color": "#f97316",
   "orientation": "portrait",
   "icons": [
     {
