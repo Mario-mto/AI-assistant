@@ -28,7 +28,10 @@ export default function Modal({ isOpen, onClose, title, children }: ModalProps) 
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
+      style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}
+    >
       {/* Backdrop with blur */}
       <div
         className="absolute inset-0 bg-black/50 backdrop-blur-sm animate-fade-in"
@@ -36,7 +39,7 @@ export default function Modal({ isOpen, onClose, title, children }: ModalProps) 
       />
 
       {/* Modal */}
-      <div className="relative glass-card max-w-md w-full max-h-[90vh] overflow-y-auto animate-scale-in shadow-2xl">
+      <div className="relative glass-card max-w-md w-full max-h-[85vh] overflow-y-auto animate-scale-in shadow-2xl">
         {/* Header */}
         <div className="flex items-center justify-between p-5 border-b border-gray-200/50 dark:border-white/10">
           <h2 className="text-xl font-display font-bold text-gray-900 dark:text-white">
@@ -45,7 +48,7 @@ export default function Modal({ isOpen, onClose, title, children }: ModalProps) 
           <button
             onClick={onClose}
             className="
-              w-8 h-8 flex items-center justify-center rounded-lg
+              w-10 h-10 flex items-center justify-center rounded-xl
               text-gray-400 hover:text-gray-600 dark:hover:text-gray-200
               hover:bg-gray-100 dark:hover:bg-white/10
               transition-colors
@@ -58,8 +61,8 @@ export default function Modal({ isOpen, onClose, title, children }: ModalProps) 
           </button>
         </div>
 
-        {/* Content */}
-        <div className="p-5">{children}</div>
+        {/* Content with safe area padding */}
+        <div className="p-5 pb-6">{children}</div>
       </div>
     </div>
   )
