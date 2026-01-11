@@ -1,0 +1,9 @@
+{
+  "buildCommand": "cd workout-tracker && npm run build",
+  "outputDirectory": "workout-tracker/dist",
+  "installCommand": "cd workout-tracker && npm install",
+  "framework": "vite",
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
