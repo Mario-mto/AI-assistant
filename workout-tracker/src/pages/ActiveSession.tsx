@@ -1,7 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useWorkout } from '../context/WorkoutContext'
-import { useAICoach } from '../hooks/useAICoach'
 import { getDefaultReps } from '../utils/defaultReps'
 import Button from '../components/ui/Button'
 import Select from '../components/ui/Select'
@@ -14,66 +13,20 @@ type SessionState = 'setup' | 'active' | 'resting'
 
 export default function ActiveSession() {
   const navigate = useNavigate()
-  const {
-    exercises,
-    programs,
-    addSession,
-    getLastSession,
-  } = useWorkout()
-  const { getLiveCoaching, analyzeCompletedSession, isConfigured, settings } = useAICoach()
+  const { exercises, programs, addSession, getLastSession } = useWorkout()
 
-  // Setup
   const [selectedExerciseId, setSelectedExerciseId] = useState('')
   const [selectedProgramId, setSelectedProgramId] = useState('')
-
-  // Session active
   const [sessionState, setSessionState] = useState<SessionState>('setup')
   const [completedSets, setCompletedSets] = useState<number[]>([])
   const [currentSetIndex, setCurrentSetIndex] = useState(0)
-
-  // Modals de confirmation
   const [showEndConfirm, setShowEndConfirm] = useState(false)
   const [showCancelConfirm, setShowCancelConfirm] = useState(false)
   const [showNoSetsAlert, setShowNoSetsAlert] = useState(false)
 
-  // Coach IA - encouragements
-  const [coachMessage, setCoachMessage] = useState('')
-  const [isLoadingCoach, setIsLoadingCoach] = useState(false)
-  const [sessionFeedback, setSessionFeedback] = useState('')
-
   const selectedExercise = exercises.find((ex) => ex.id === selectedExerciseId)
   const selectedProgram = programs.find((prog) => prog.id === selectedProgramId)
-
   const canStart = selectedExerciseId && selectedProgramId
-
-  // Récupérer un message d'encouragement du coach pendant le repos
-  useEffect(() => {
-    if (sessionState !== 'resting') return
-    if (!isConfigured || !settings.liveCoachingEnabled) return
-    if (!selectedExercise || !selectedProgram) return
-
-    const fetchCoachMessage = async () => {
-      setIsLoadingCoach(true)
-      try {
-        const message = await getLiveCoaching(
-          currentSetIndex + 1,
-          completedSets,
-          selectedExercise.goal,
-          selectedExercise.name,
-          selectedProgram.name
-        )
-        if (message) {
-          setCoachMessage(message)
-        }
-      } catch (error) {
-        console.error('Erreur coaching live:', error)
-      } finally {
-        setIsLoadingCoach(false)
-      }
-    }
-
-    fetchCoachMessage()
-  }, [sessionState, completedSets.length])
 
   const handleStartSession = () => {
     if (!canStart) return
@@ -84,12 +37,9 @@ export default function ActiveSession() {
 
   const handleValidateSet = (reps: number) => {
     setCompletedSets([...completedSets, reps])
-
-    // Si le programme a un temps de repos, passer en mode repos
     if (selectedProgram?.restSeconds || selectedProgram?.emomSeconds) {
       setSessionState('resting')
     } else {
-      // Sinon, série suivante directement
       setCurrentSetIndex((prev) => prev + 1)
     }
   }
@@ -107,40 +57,14 @@ export default function ActiveSession() {
     setShowEndConfirm(true)
   }
 
-  const handleConfirmEnd = async () => {
+  const handleConfirmEnd = () => {
     if (!selectedExerciseId || !selectedProgramId) return
-
-    // Fermer la modal immédiatement
     setShowEndConfirm(false)
-
-    // Sauvegarder la séance
     addSession({
       exerciseId: selectedExerciseId,
       programId: selectedProgramId,
       sets: completedSets,
     })
-
-    // Récupérer le feedback du coach si activé
-    if (isConfigured && selectedExercise && selectedProgram) {
-      try {
-        const feedback = await analyzeCompletedSession(
-          selectedExercise.name,
-          selectedProgram.name,
-          completedSets,
-          selectedExercise.goal
-        )
-        if (feedback) {
-          setSessionFeedback(feedback)
-          // Afficher le feedback pendant 5 secondes avant redirection
-          setTimeout(() => navigate('/'), 5000)
-          return
-        }
-      } catch (error) {
-        console.error('Erreur feedback séance:', error)
-      }
-    }
-
-    // Redirection vers dashboard
     navigate('/')
   }
 
@@ -163,23 +87,14 @@ export default function ActiveSession() {
     setCurrentSetIndex(0)
   }
 
-  // Calcul de la valeur par défaut pour la série courante
   const getDefaultRepsForCurrentSet = (): number => {
     if (!selectedProgram || !selectedExercise) return 0
-
     const lastSession = getLastSession(selectedExerciseId, selectedProgramId)
-
-    return getDefaultReps(
-      selectedProgram,
-      currentSetIndex,
-      selectedExercise.goal,
-      lastSession
-    )
+    return getDefaultReps(selectedProgram, currentSetIndex, selectedExercise.goal, lastSession)
   }
 
   const restSeconds = selectedProgram?.restSeconds || selectedProgram?.emomSeconds || 60
 
-  // Options pour les selects
   const exerciseOptions = exercises.map((ex) => ({
     value: ex.id,
     label: `${ex.name} (objectif: ${ex.goal})`,
@@ -190,56 +105,48 @@ export default function ActiveSession() {
     label: prog.name,
   }))
 
-  // Écran de feedback de fin de séance
-  if (sessionFeedback) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh]">
-        <Card className="max-w-md text-center bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900/30 dark:to-blue-900/30">
-          <div className="text-6xl mb-4">🎉</div>
-          <h2 className="text-2xl font-bold mb-4 text-green-700 dark:text-green-400">
-            Séance terminée !
-          </h2>
-          <div className="mb-6">
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-              {completedSets.length} série{completedSets.length > 1 ? 's' : ''} • {completedSets.reduce((a, b) => a + b, 0)} reps au total
-            </p>
-          </div>
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-4 mb-4">
-            <div className="flex items-start gap-3">
-              <span className="text-2xl">🤖</span>
-              <div className="text-left">
-                <p className="font-medium text-blue-700 dark:text-blue-300 text-sm mb-1">Feedback du coach</p>
-                <p className="text-gray-700 dark:text-gray-300 text-sm whitespace-pre-wrap">{sessionFeedback}</p>
-              </div>
-            </div>
-          </div>
-          <p className="text-xs text-gray-500 dark:text-gray-400">
-            Redirection vers le dashboard dans quelques secondes...
-          </p>
-        </Card>
-      </div>
-    )
-  }
-
-  // Affichage conditionnel selon l'état
+  // SETUP STATE
   if (sessionState === 'setup') {
     return (
-      <div>
-        <h1 className="text-3xl font-bold mb-6">Nouvelle Séance</h1>
+      <div className="animate-fade-in">
+        <header className="mb-8">
+          <h1 className="text-3xl font-display font-bold">
+            <span className="gradient-text">Nouvelle Seance</span>
+          </h1>
+          <p className="text-gray-500 dark:text-gray-400 mt-2">
+            Configure ton entrainement
+          </p>
+        </header>
 
         {exercises.length === 0 || programs.length === 0 ? (
-          <Card>
-            <p className="text-center text-gray-600">
-              {exercises.length === 0 && 'Aucun exercice configuré. '}
-              {programs.length === 0 && 'Aucun programme configuré. '}
-            </p>
-            <p className="text-center text-gray-600 mt-2">
-              Va dans l'onglet <span className="font-bold">Config</span> pour en créer.
-            </p>
+          <Card variant="glass" className="animate-scale-in">
+            <div className="text-center py-8">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-energy-400 to-volt-500 flex items-center justify-center">
+                <svg className="w-8 h-8 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="M12 8v8M8 12h8" />
+                </svg>
+              </div>
+              <p className="text-gray-600 dark:text-gray-300 mb-2">
+                {exercises.length === 0 && 'Aucun exercice configure. '}
+                {programs.length === 0 && 'Aucun programme configure. '}
+              </p>
+              <p className="text-gray-500 dark:text-gray-400 text-sm mb-6">
+                Va dans Config pour en creer.
+              </p>
+              <Button onClick={() => navigate('/config')} size="sm">
+                Configurer
+              </Button>
+            </div>
           </Card>
         ) : (
-          <Card>
-            <h2 className="text-xl font-semibold mb-4">Sélectionne ton exercice et programme</h2>
+          <Card variant="glass" className="animate-slide-up">
+            <h2 className="text-lg font-display font-bold mb-6 flex items-center gap-2">
+              <span className="w-8 h-8 rounded-lg bg-gradient-to-br from-energy-400 to-energy-600 flex items-center justify-center text-white text-sm">
+                1
+              </span>
+              Selection
+            </h2>
 
             <Select
               label="Exercice"
@@ -256,19 +163,23 @@ export default function ActiveSession() {
             />
 
             {selectedProgram && (
-              <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg text-sm">
-                <p className="font-medium text-gray-900 dark:text-gray-100">Détails du programme :</p>
+              <div className="mt-4 p-4 bg-volt-500/10 dark:bg-volt-500/20 rounded-xl border border-volt-500/20">
+                <p className="font-semibold text-volt-700 dark:text-volt-300 text-sm uppercase tracking-wide mb-2">
+                  Details du programme
+                </p>
                 {selectedProgram.description && (
-                  <p className="text-gray-700 dark:text-gray-300 mt-1">{selectedProgram.description}</p>
+                  <p className="text-gray-600 dark:text-gray-300 text-sm mb-2">
+                    {selectedProgram.description}
+                  </p>
                 )}
-                <div className="mt-2 text-gray-600 dark:text-gray-400">
+                <div className="text-sm text-gray-500 dark:text-gray-400 space-y-1">
                   {selectedProgram.restSeconds && (
-                    <p>• Repos entre séries : {selectedProgram.restSeconds}s</p>
+                    <p>Repos: {selectedProgram.restSeconds}s</p>
                   )}
                   {selectedProgram.emomSeconds && (
-                    <p>• EMOM : {selectedProgram.emomSeconds}s</p>
+                    <p>EMOM: {selectedProgram.emomSeconds}s</p>
                   )}
-                  <p>• Pattern : {selectedProgram.defaultRepsPattern}</p>
+                  <p>Pattern: {selectedProgram.defaultRepsPattern}</p>
                 </div>
               </div>
             )}
@@ -278,8 +189,12 @@ export default function ActiveSession() {
               disabled={!canStart}
               fullWidth
               className="mt-6"
+              size="lg"
             >
-              Commencer la séance
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                <polygon points="5,3 19,12 5,21" />
+              </svg>
+              Commencer
             </Button>
           </Card>
         )}
@@ -287,90 +202,66 @@ export default function ActiveSession() {
     )
   }
 
+  // RESTING STATE
   if (sessionState === 'resting') {
     return (
-      <div>
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold">{selectedExercise?.name}</h1>
-          <p className="text-gray-600 dark:text-gray-400">{selectedProgram?.name}</p>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-            {completedSets.length} série{completedSets.length > 1 ? 's' : ''} complétée{completedSets.length > 1 ? 's' : ''}
-          </p>
-        </div>
+      <div className="animate-fade-in">
+        <header className="mb-6">
+          <h1 className="text-2xl font-display font-bold gradient-text">
+            {selectedExercise?.name}
+          </h1>
+          <p className="text-gray-500 dark:text-gray-400">{selectedProgram?.name}</p>
+          <div className="flex items-center gap-2 mt-2">
+            <span className="px-2 py-1 bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded-lg text-sm font-semibold">
+              {completedSets.length} serie{completedSets.length > 1 ? 's' : ''}
+            </span>
+          </div>
+        </header>
 
-        <Card>
-          <h2 className="text-xl font-semibold text-center mb-6">Temps de repos</h2>
-          <Timer
-            seconds={restSeconds}
-            onComplete={handleRestComplete}
-            autoStart={true}
-          />
+        <Card variant="glass" className="mb-6">
+          <h2 className="text-lg font-display font-bold text-center mb-2">Temps de repos</h2>
+          <Timer seconds={restSeconds} onComplete={handleRestComplete} autoStart={true} />
         </Card>
 
-        {/* Message du coach IA */}
-        {isConfigured && settings.liveCoachingEnabled && (
-          <Card className="mt-4 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/30 dark:to-purple-900/30 border-blue-200 dark:border-blue-700">
-            <div className="flex items-start gap-3">
-              <span className="text-2xl">🤖</span>
-              <div className="flex-1">
-                <p className="font-medium text-blue-800 dark:text-blue-200 text-sm mb-1">Coach IA</p>
-                {isLoadingCoach ? (
-                  <p className="text-gray-600 dark:text-gray-400 text-sm animate-pulse">
-                    Analyse en cours...
-                  </p>
-                ) : coachMessage ? (
-                  <p className="text-gray-700 dark:text-gray-300">{coachMessage}</p>
-                ) : (
-                  <p className="text-gray-500 dark:text-gray-400 text-sm italic">
-                    Continue comme ça !
-                  </p>
-                )}
-              </div>
-            </div>
-          </Card>
-        )}
-
-        <div className="mt-4 flex gap-3">
+        <div className="flex gap-3 mb-6">
           <Button variant="secondary" onClick={handleRestComplete} fullWidth>
-            Passer le repos
+            Passer
           </Button>
           <Button variant="danger" onClick={handleEndSession} fullWidth>
-            Terminer la séance
+            Terminer
           </Button>
         </div>
 
-        {/* Résumé des séries */}
-        <Card className="mt-6">
-          <h3 className="font-semibold mb-3">Séries complétées :</h3>
+        {/* Completed sets */}
+        <Card variant="glass">
+          <h3 className="font-display font-bold mb-3">Series completees</h3>
           <div className="flex flex-wrap gap-2">
             {completedSets.map((reps, idx) => (
               <div
                 key={idx}
-                className="px-3 py-2 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-lg font-medium"
+                className="px-3 py-2 bg-gradient-to-r from-energy-500/20 to-volt-500/20 text-energy-700 dark:text-energy-300 rounded-xl font-bold text-sm"
               >
-                #{idx + 1}: {reps} reps
+                #{idx + 1}: {reps}
               </div>
             ))}
           </div>
         </Card>
 
-        {/* Modal de confirmation fin de séance */}
         <ConfirmModal
           isOpen={showEndConfirm}
           onClose={() => setShowEndConfirm(false)}
           onConfirm={handleConfirmEnd}
-          title="Terminer la séance"
-          message={`Tu as complété ${completedSets.length} série(s). Veux-tu enregistrer cette séance ?`}
+          title="Terminer la seance"
+          message={`Tu as complete ${completedSets.length} serie(s). Enregistrer ?`}
           confirmText="Enregistrer"
         />
 
-        {/* Modal de confirmation annulation */}
         <ConfirmModal
           isOpen={showCancelConfirm}
           onClose={() => setShowCancelConfirm(false)}
           onConfirm={handleConfirmCancel}
-          title="Abandonner la séance"
-          message="Tu as des séries en cours. Abandonner la séance ? Les données seront perdues."
+          title="Abandonner"
+          message="Abandonner la seance ? Les donnees seront perdues."
           confirmText="Abandonner"
           cancelText="Continuer"
         />
@@ -378,16 +269,25 @@ export default function ActiveSession() {
     )
   }
 
-  // sessionState === 'active'
+  // ACTIVE STATE
   return (
-    <div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">{selectedExercise?.name}</h1>
-        <p className="text-gray-600 dark:text-gray-400">{selectedProgram?.name}</p>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-          {completedSets.length} série{completedSets.length > 1 ? 's' : ''} complétée{completedSets.length > 1 ? 's' : ''}
-        </p>
-      </div>
+    <div className="animate-fade-in">
+      <header className="mb-6">
+        <h1 className="text-2xl font-display font-bold gradient-text">
+          {selectedExercise?.name}
+        </h1>
+        <p className="text-gray-500 dark:text-gray-400">{selectedProgram?.name}</p>
+        <div className="flex items-center gap-2 mt-2">
+          <span className="px-2 py-1 bg-energy-500/20 text-energy-600 dark:text-energy-400 rounded-lg text-sm font-semibold">
+            Serie {currentSetIndex + 1}
+          </span>
+          {completedSets.length > 0 && (
+            <span className="px-2 py-1 bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded-lg text-sm font-semibold">
+              {completedSets.length} faite{completedSets.length > 1 ? 's' : ''}
+            </span>
+          )}
+        </div>
+      </header>
 
       <SetLogger
         setNumber={currentSetIndex + 1}
@@ -404,51 +304,47 @@ export default function ActiveSession() {
         </Button>
       </div>
 
-      {/* Résumé des séries */}
       {completedSets.length > 0 && (
-        <Card className="mt-6">
-          <h3 className="font-semibold mb-3">Séries complétées :</h3>
+        <Card variant="glass" className="mt-6">
+          <h3 className="font-display font-bold mb-3">Series completees</h3>
           <div className="flex flex-wrap gap-2">
             {completedSets.map((reps, idx) => (
               <div
                 key={idx}
-                className="px-3 py-2 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-lg font-medium"
+                className="px-3 py-2 bg-gradient-to-r from-energy-500/20 to-volt-500/20 text-energy-700 dark:text-energy-300 rounded-xl font-bold text-sm"
               >
-                #{idx + 1}: {reps} reps
+                #{idx + 1}: {reps}
               </div>
             ))}
           </div>
         </Card>
       )}
 
-      {/* Modal de confirmation fin de séance */}
       <ConfirmModal
         isOpen={showEndConfirm}
         onClose={() => setShowEndConfirm(false)}
         onConfirm={handleConfirmEnd}
-        title="Terminer la séance"
-        message={`Tu as complété ${completedSets.length} série(s). Veux-tu enregistrer cette séance ?`}
+        title="Terminer la seance"
+        message={`Tu as complete ${completedSets.length} serie(s). Enregistrer ?`}
         confirmText="Enregistrer"
       />
 
-      {/* Modal de confirmation annulation */}
       <ConfirmModal
         isOpen={showCancelConfirm}
         onClose={() => setShowCancelConfirm(false)}
         onConfirm={handleConfirmCancel}
-        title="Abandonner la séance"
-        message="Tu as des séries en cours. Abandonner la séance ? Les données seront perdues."
+        title="Abandonner"
+        message="Abandonner la seance ? Les donnees seront perdues."
         confirmText="Abandonner"
         cancelText="Continuer"
       />
 
-      {/* Modal alerte aucune série */}
       <ConfirmModal
         isOpen={showNoSetsAlert}
         onClose={() => setShowNoSetsAlert(false)}
         onConfirm={() => setShowNoSetsAlert(false)}
-        title="Aucune série"
-        message="Tu n'as complété aucune série. Fais au moins une série avant de terminer la séance."
+        title="Aucune serie"
+        message="Fais au moins une serie avant de terminer."
         confirmText="Compris"
         cancelText="Fermer"
       />

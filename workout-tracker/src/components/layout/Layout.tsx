@@ -3,13 +3,16 @@ import Navigation from './Navigation'
 
 export default function Layout() {
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col transition-colors">
-      {/* Zone de contenu principale */}
-      <main className="flex-1 container mx-auto px-4 py-6 pb-24 max-w-4xl">
+    <div className="min-h-screen flex flex-col">
+      {/* Mesh background */}
+      <div className="mesh-bg" />
+
+      {/* Main content area */}
+      <main className="flex-1 container mx-auto px-4 py-6 mb-nav max-w-lg relative z-10">
         <Outlet />
       </main>
 
-      {/* Navigation fixe en bas */}
+      {/* Fixed bottom navigation */}
       <Navigation />
     </div>
   )

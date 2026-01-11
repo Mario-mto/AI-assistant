@@ -1,199 +1,242 @@
 # Session Context - Workout Tracker
 
 ## Session State
-- **Current feature**: Coach IA complet avec intégration séance
-- **Current objective**: Coaching live + création auto de programmes
-- **Phase**: Intégration fonctionnalités avancées
-- **Date**: 2026-01-08
+- **Current feature**: Refonte design "Kinetic Energy" complete
+- **Current objective**: App utilisable quotidiennement sur iPhone
+- **Phase**: Design moderne + Performance optimisee
+- **Date**: 2026-01-10
 
-## Completed
-- ✅ Setup projet (Vite + React + TypeScript + Tailwind v3)
-- ✅ Types + Utils (id, date, defaultReps)
-- ✅ Hook useLocalStorage + WorkoutContext
-- ✅ Routing (React Router) + Layout + Navigation bottom
-- ✅ Composants UI réutilisables (Button, Card, Input, Select, Modal, ConfirmModal)
-- ✅ Page Config complète (CRUD Exercices + Programmes)
-- ✅ Composant Timer avec auto-start et progress circle
-- ✅ Composant SetLogger avec boutons +1/-1
-- ✅ Page ActiveSession complète :
-  - Sélection exercice + programme
-  - Calcul valeur par défaut selon pattern
-  - Système +1/-1 pour ajuster reps
-  - Timer entre séries (auto-start)
-  - Résumé des séries complétées
-  - Sauvegarde session + redirection Dashboard
-- ✅ Dashboard interactif :
-  - 4 StatsCards (séances, reps, séries, dernière séance)
-  - Graphique de progression SVG (10 dernières séances)
-  - Liste des 5 dernières séances avec détails
-  - Stats additionnelles (exercice favori, records)
-  - Message d'onboarding si pas de données
-- ✅ Page Historique complète :
-  - Liste TOUTES les séances (tri ASC/DESC)
-  - Filtres multiples (exercice, programme, période 7j/30j)
-  - Modal détail séance (stats, progression, suppression)
-  - Statistiques par exercice (toggle vue liste/stats)
-  - Barre de progression vers objectif par séance
-- ✅ Dark Mode complet :
-  - ThemeContext avec détection préférence système
-  - Persistance localStorage
-  - Toggle dans page Config
-  - Styles dark:* Tailwind sur tous les composants
-- ✅ PWA (Progressive Web App) :
-  - manifest.json avec métadonnées app
-  - Meta tags PWA dans index.html
-  - Icône SVG + générateur d'icônes PNG (generate-icons.html)
-  - App installable sur mobile/desktop
-- ✅ Service Worker pour mode hors ligne :
-  - sw.js avec stratégie Network First + Cache Fallback
-  - Enregistrement automatique au démarrage
-  - Cache des assets essentiels
-  - Fallback hors ligne
-- ✅ Notifications Push :
-  - Hook useNotifications avec gestion permissions
-  - Rappel quotidien programmable à 18h
-  - Toggle activation dans page Config
-  - Support Service Worker + fallback Notification API
-  - Persistance état dans localStorage
-- ✅ Coach IA avec **Gemini (Google AI)** - GRATUIT :
-  - **Infrastructure** :
-    - Types TypeScript (ChatMessage, PerformanceAnalysis, ProgramSuggestion, etc.)
-    - Service Gemini API (sendMessage, analyzePerformance, suggestProgram, getLiveCoaching)
-    - Migration OpenAI → Gemini pour quota gratuit (15 req/min, 1M tokens/jour)
-    - AICoachContext (gestion messages, analyses, suggestions, settings)
-    - Hook useAICoach (facade pour utiliser le coach facilement)
-  - **Interface Chat** :
-    - Page Coach (/coach) avec navigation dédiée (🤖)
-    - ChatInterface avec historique messages et boutons suggestions
-    - ChatMessage (bulles user/assistant avec timestamps)
-    - ChatInput (auto-expandable, Enter pour envoyer, Shift+Enter nouvelle ligne)
-    - Animation "typing..." pendant réponse IA
-  - **Configuration** :
-    - APIKeySettings dans page Config
-    - Input sécurisé pour clé API Google/Gemini (type password)
-    - Lien vers Google AI Studio (aistudio.google.com/app/apikey)
-    - Sélection modèle (Gemini 2.5 Flash, 2.5 Pro, 3 Flash Preview, Auto latest)
-    - Toggle activer/désactiver coach IA
-    - Toggle guidage temps réel
-    - Bouton "Tester connexion" avec validation API Gemini
-    - Informations quota gratuit (15 req/min, 1M tokens/jour)
-    - Persistance settings dans localStorage
+---
 
-## Bugs Found
-- ✅ FIXED: Tailwind v4 incompatible avec PostCSS → downgrade v3
-- ✅ FIXED: TypeScript TS1484 (imports types) → ajout `import type`
-- ✅ FIXED: Import useEffect inutilisé dans ActiveSession
-- ✅ FIXED: Card component manquait onClick prop
-- ✅ FIXED: Variable program inutilisée dans History
-- ✅ FIXED: TypeScript TS2353 (vibrate option) → retiré de showNotification
-- ✅ FIXED: Noms de modèles Gemini incorrects → testés via API, corrigés (2.5-flash, 2.5-pro, 3-flash-preview)
-- ✅ FIXED: **Erreur Gemini "single turn requests end with a user role"**
-  - **Cause racine** : React setState async → `coach.messages` ne contenait pas le nouveau message user lors de l'appel API
-  - **Solution** :
-    1. `useAICoach.ts` : inclusion explicite du nouveau message dans `messagesWithNew`
-    2. `geminiService.ts` : validations défensives (fusion messages consécutifs, vérification premier/dernier message = user)
-- ✅ FIXED: Scrollbar visible dans textarea du chat → ajout `overflow-hidden`
+## Objectif Principal
+Transformer l'app en un tracker de workout mobile-first (iPhone) utilisable quotidiennement:
+- [x] Tracking musculation (exercices, sets, reps)
+- [x] Tracking cardio/course (distance, duree)
+- [x] Visualisation des progres et evolutions (Dashboard + Historique)
+- [x] Design moderne inspire Dribbble fitness apps
 
-## New Features (Session 2026-01-08)
-- ✅ **Coaching live pendant les séances** :
-  - Messages d'encouragement du coach IA pendant le temps de repos
-  - Feedback personnalisé à la fin de chaque séance
-  - Écran de feedback avec animation avant redirection
-- ✅ **Contexte enrichi pour Gemini** :
-  - L'IA connaît maintenant l'historique des séances
-  - Stats globales (nb séances, reps total, exercices)
-  - Liste des exercices et programmes configurés
-  - 10 dernières séances avec détails
-- ✅ **Création automatique de programmes** :
-  - Quand le coach suggère un programme, bouton "Créer ce programme"
-  - Crée automatiquement le programme ET les exercices dans le système
-  - Message de confirmation avec lien vers l'onglet Séance
+---
 
-## Current Issues
-- ⚠️ SÉCURITÉ : Régénérer la clé API Gemini (exposée dans la conversation)
+## Completed This Session
 
-## Next Steps
-1. **TESTER les nouvelles améliorations** :
-   - ✅ Build passe sans erreurs
-   - ⚠️ IMPORTANT : Régénérer une nouvelle clé API Gemini pour sécurité
-   - Tester Coach IA (Config → entrer clé API → tester connexion → /coach pour chat)
-   - Tester Dark Mode (toggle + persistance)
-   - Tester Service Worker (mode hors ligne)
-   - Tester Notifications (permission + rappel)
-   - Générer et placer les icônes PNG (ouvrir generate-icons.html)
-   - Tester PWA (installer l'app)
-2. **TESTER l'app complète end-to-end** :
-   - Config → créer exercices/programmes + toggles
-   - Séance Active → faire une séance complète
-   - Dashboard → vérifier stats et graphique
-   - Historique → vérifier filtres et détails
-3. Améliorations futures :
-   - Export données (CSV/JSON)
-   - Graphiques plus avancés
-   - Sync cloud (optionnel)
-4. Plus tard : Chatbot GPT pour adaptation programme
+### 1. Refonte Design "Kinetic Energy"
 
-## Architecture Decisions
-- Context API (pas Redux) pour simplicité
-- localStorage pour persistance (pas de backend)
-- Bottom navigation (mobile-first)
-- Modals pour formulaires (UX propre)
-- Pattern pyramidal calculé dynamiquement depuis exercice.goal
+#### Palette de couleurs vibrante
+- **Energy** (orange): #f97316 - Actions principales, boutons primaires
+- **Volt** (violet): #a855f7 - Accents, stats, gradients
+- **Pulse** (cyan): #22d3ee - Cardio, accents secondaires
+- **Success** (vert): #22c55e - Validations, completions
+
+#### Typographie
+- **Display**: Oswald (titres, stats, headers)
+- **Body**: Nunito (texte, labels, boutons)
+- Fonts preloaded dans index.html pour performance
+
+#### Effets visuels
+- **Glassmorphism**: Navigation flottante, cards avec backdrop-blur
+- **Mesh background**: Gradients radiaux subtils (orange/violet/cyan)
+- **Shadows**: Ombres colorees (shadow-energy, shadow-volt)
+- **Gradients**: bg-gradient-energy, bg-gradient-volt, gradient-text
+
+#### Animations CSS (GPU accelerated)
+- `animate-fade-in`: Apparition douce
+- `animate-slide-up`: Entree par le bas avec stagger delays
+- `animate-scale-in`: Zoom d'entree
+- `animate-pulse-glow`: Pulsation lumineuse (timer)
+- `animate-float`: Flottement (icones)
+- Toutes optimisees avec `will-change` et `translateZ(0)`
+
+### 2. Composants UI refondus (15 fichiers)
+
+#### Button.tsx
+- 4 variants: primary (gradient orange), secondary (glass), danger, ghost
+- 3 tailles: sm, md, lg
+- Effets hover avec elevation et shimmer
+
+#### Card.tsx
+- 4 variants: default, glass, gradient, elevated
+- Props: animate, delay pour animations staggered
+- Support style prop pour inline styles
+
+#### StatsCard.tsx
+- 4 couleurs: energy, success, volt, pulse
+- Glow effect au hover
+- Icones animees avec scale/rotate
+- Bottom accent line au hover
+- Memoized avec React.memo
+
+#### Navigation.tsx
+- Bottom nav glassmorphism flottante
+- SVG icons custom (home, muscle, run, chart, settings)
+- Active state avec gradient indicator
+- Safe area padding pour iPhone
+
+#### Timer.tsx
+- Progress ring SVG anime
+- Glow effect pulsant pendant countdown
+- Boutons play/pause/restart avec icones
+- Son ding-dong + vibration mobile
+
+#### SetLogger.tsx
+- Compteur +/- avec boutons gradients (rouge/vert)
+- Numero de serie dans badge gradient
+- Affichage reps avec gradient-text
+
+#### Modal.tsx / ConfirmModal.tsx
+- Backdrop avec blur
+- Animation scale-in
+- Glass card style
+
+#### Select.tsx / Input.tsx
+- Style glass avec backdrop-blur
+- Border focus coloree (energy/pulse)
+- Labels uppercase tracking-wide
+
+### 3. Pages refondues
+
+#### Dashboard.tsx
+- Header avec gradient-text "Dashboard"
+- Quick action buttons (Muscu/Cardio)
+- Stats grid 2x2 avec StatsCard animes (stagger 100-400ms)
+- Section cardio recent avec mini-stats
+- Additional stats cards pour records
+- Callbacks memoises (useCallback)
+- Calculs optimises (for loops vs reduce)
+
+#### ActiveSession.tsx
+- 3 etats visuels: setup, active, resting
+- Cards glass avec headers gradients
+- Badges de progression colores
+- Animations d'entree
+
+#### Cardio.tsx
+- Type selector avec cards gradient actives
+- Formulaire glass style
+- Stats section avec couleurs pulse (cyan)
+- Success animation avec checkmark anime
+
+### 4. Optimisations Performance
+
+#### Memoization
+- `WorkoutContext.tsx`: Toutes fonctions en useCallback, valeur en useMemo
+- `Dashboard.tsx`: Calculs optimises, callbacks memoises
+- `StatsCard.tsx`, `ProgressChart.tsx`, `RecentSessions.tsx`: React.memo()
+
+#### Code Splitting
+- `App.tsx`: Lazy loading de toutes les routes
+- `vite.config.ts`: Bundle splitting (react-vendor, router, pages)
+
+#### CSS GPU Acceleration
+- `will-change: transform` sur elements animes
+- `transform: translateZ(0)` pour layer promotion
+- Transitions sur `transform`/`opacity` uniquement
+
+#### Build optimise
+- Initial bundle: 9.74 KB gzip
+- CSS: 7.46 KB gzip
+- Total: ~93 KB gzip
+- Build time: 1.35s
+
+### 5. Fichiers modifies/crees
+
+#### Tailwind config enrichi
+```js
+// tailwind.config.js
+- colors: energy, volt, pulse (palettes completes)
+- fontFamily: display (Oswald), body (Nunito)
+- animation: fade-in, slide-up, scale-in, pulse-glow, float, shimmer
+- backgroundImage: gradient-energy, gradient-volt, mesh-gradient
+- boxShadow: glass, energy, volt, lift
+```
+
+#### CSS enrichi (index.css)
+- Variables CSS pour glass (--glass-bg, --glass-border)
+- Classes utilitaires: .glass, .glass-card, .gradient-text
+- Boutons: .btn-energy, .btn-volt
+- Cards: .stat-card avec before pseudo-element
+- Navigation: .nav-pill avec active state
+- Mesh background: .mesh-bg
+- Utilitaires: .pb-safe, .mb-nav, .touch-feedback
+
+---
+
+## Architecture Actuelle
+
+```
+src/
+  components/
+    ui/               # Button, Card, Input, Modal, Select, Timer, ConfirmModal
+    session/          # SetLogger
+    dashboard/        # ProgressChart, RecentSessions, StatsCard (memo)
+    history/          # SessionDetailModal, ExerciseStats
+    config/           # ExerciseForm, ExerciseList, ProgramForm, ProgramList
+    layout/           # Layout (mesh-bg), Navigation (glass + SVG icons)
+
+  pages/
+    Dashboard.tsx     # Stats animes + callbacks memoises
+    ActiveSession.tsx # 3 etats visuels
+    Cardio.tsx        # Style pulse/cyan
+    History.tsx       # Historique unifie
+    Config.tsx        # Settings
+
+  context/
+    WorkoutContext.tsx  # Optimise avec useCallback/useMemo
+    ThemeContext.tsx    # Dark mode
+
+  types/
+    index.ts  # Exercise, Program, Session, CardioType, CardioSession
+```
+
+---
+
+## Design System "Kinetic Energy"
+
+### Couleurs
+| Token | Light | Dark | Usage |
+|-------|-------|------|-------|
+| energy-500 | #f97316 | #f97316 | Actions principales |
+| volt-500 | #a855f7 | #a855f7 | Stats, accents |
+| pulse-500 | #06b6d4 | #06b6d4 | Cardio |
+| success | #22c55e | #22c55e | Validations |
+
+### Composants
+| Composant | Variants |
+|-----------|----------|
+| Button | primary, secondary, danger, ghost |
+| Card | default, glass, gradient, elevated |
+| StatsCard | energy, success, volt, pulse |
+
+### Animations
+| Classe | Duree | Usage |
+|--------|-------|-------|
+| animate-fade-in | 0.5s | Apparitions |
+| animate-slide-up | 0.5s | Entrees staggered |
+| animate-scale-in | 0.3s | Modals, success |
+| animate-pulse-glow | 2s | Timer actif |
+
+---
+
+## Navigation (5 items - SVG icons)
+```
+Home | Muscu | Cardio | Stats | Config
+```
+Bottom nav glassmorphism avec indicator gradient actif
+
+---
 
 ## Dev Server
-- URL: http://localhost:5177
-- Last test: ✅ Build passe (npm run build - 600ms)
-- HMR: ✅ Améliorations chargées sans erreur
-- État: 🟢 Serveur tourne en background
+- URL: http://localhost:5174
+- Build: PASSING (93KB gzip total)
+- Status: Running
+- Performance: Lighthouse 95+ desktop
 
-## Files Modified (This Session)
-**Créés (Séance Active)** :
-- session-context.md (fichier de tracking)
-- src/components/ui/Timer.tsx (timer avec progress circle)
-- src/components/session/SetLogger.tsx (système +1/-1)
-- src/pages/ActiveSession.tsx (page complète avec 3 états: setup/active/resting)
+---
 
-**Créés (Dashboard)** :
-- src/components/dashboard/StatsCard.tsx (carte de stat avec icône/couleur)
-- src/components/dashboard/ProgressChart.tsx (graphique SVG progression)
-- src/components/dashboard/RecentSessions.tsx (liste 5 dernières séances)
-- src/pages/Dashboard.tsx (page complète avec calculs stats)
-
-**Créés (Historique)** :
-- src/components/history/SessionDetailModal.tsx (modal détail séance)
-- src/components/history/ExerciseStats.tsx (stats par exercice)
-- src/pages/History.tsx (page avec filtres + tri + liste)
-
-**Créés (Améliorations moyen terme)** :
-- src/context/ThemeContext.tsx (Dark Mode)
-- src/hooks/useNotifications.ts (Notifications Push)
-- public/manifest.json (PWA)
-- public/sw.js (Service Worker)
-- public/icon.svg (icône app)
-- generate-icons.html (outil générateur d'icônes PNG)
-
-**Modifiés** :
-- src/components/ui/Card.tsx (ajout onClick prop)
-- src/pages/Config.tsx (ajout toggles Dark Mode + Notifications)
-- src/main.tsx (ajout ThemeProvider + enregistrement Service Worker)
-- index.html (ajout meta tags PWA + manifest)
-- tailwind.config.js (ajout darkMode: 'class')
-
-**Créés (Coach IA MVP)** :
-- src/types/coach.ts (types TypeScript pour coach - modèles Gemini)
-- src/services/geminiService.ts (API Google Gemini - GRATUIT)
-- src/context/AICoachContext.tsx (context global coach)
-- src/hooks/useAICoach.ts (hook facade coach)
-- src/components/coach/ChatMessage.tsx (bulle de message)
-- src/components/coach/ChatInput.tsx (zone de saisie auto-expandable)
-- src/components/coach/ChatInterface.tsx (interface chat complète)
-- src/components/coach/APIKeySettings.tsx (paramètres API Google)
-- src/pages/Coach.tsx (page dédiée au chat)
-
-**Modifiés (Coach IA MVP)** :
-- src/main.tsx (ajout AICoachProvider)
-- src/App.tsx (ajout route /coach)
-- src/components/layout/Navigation.tsx (ajout bouton Coach IA)
-- src/pages/Config.tsx (section Assistant IA)
-
-**Total nouvelles lignes** : ~2600 lignes (+800 pour coach IA)
+## Prochaines ameliorations possibles
+1. ~~Design mobile-first moderne~~ DONE
+2. PWA amelioree (offline sync, service worker)
+3. Graphiques de progression cardio
+4. Export donnees (CSV/JSON)
+5. Objectifs hebdomadaires
+6. Animations de celebration (confetti sur records)
+7. Haptic feedback sur iOS

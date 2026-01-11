@@ -22,12 +22,12 @@ export default function ConfirmModal({
 }: ConfirmModalProps) {
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={title}>
-      <p className="text-gray-700 dark:text-gray-300 mb-6">{message}</p>
-      <div className="flex gap-3 justify-end">
-        <Button variant="secondary" onClick={onClose}>
+      <p className="text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">{message}</p>
+      <div className="flex gap-3">
+        <Button variant="secondary" onClick={onClose} fullWidth>
           {cancelText}
         </Button>
-        <Button variant="danger" onClick={onConfirm}>
+        <Button variant="danger" onClick={onConfirm} fullWidth>
           {confirmText}
         </Button>
       </div>

@@ -29,7 +29,7 @@ export type Exercise = {
 }
 
 /**
- * Séance d'entraînement (workout session)
+ * Séance d'entraînement musculation
  */
 export type Session = {
   id: string
@@ -37,4 +37,21 @@ export type Session = {
   exerciseId: string
   programId: string
   sets: number[] // tableau des reps par série
+}
+
+/**
+ * Type de cardio
+ */
+export type CardioType = 'running' | 'cycling' | 'walking'
+
+/**
+ * Séance cardio (course, vélo, marche)
+ */
+export type CardioSession = {
+  id: string
+  date: string // ISO format: YYYY-MM-DD
+  type: CardioType
+  duration: number // minutes
+  distance: number // kilomètres
+  notes?: string
 }

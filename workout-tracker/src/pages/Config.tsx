@@ -11,7 +11,6 @@ import ExerciseForm from '../components/config/ExerciseForm'
 import ExerciseList from '../components/config/ExerciseList'
 import ProgramForm from '../components/config/ProgramForm'
 import ProgramList from '../components/config/ProgramList'
-import APIKeySettings from '../components/coach/APIKeySettings'
 
 type Tab = 'exercises' | 'programs'
 
@@ -184,12 +183,6 @@ export default function Config() {
             />
           </button>
         </div>
-      </Card>
-
-      {/* Assistant IA */}
-      <Card className="mb-6">
-        <h2 className="text-lg font-semibold mb-4">🤖 Assistant IA</h2>
-        <APIKeySettings />
       </Card>
 
       {/* Tabs */}

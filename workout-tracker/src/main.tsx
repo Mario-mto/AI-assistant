@@ -4,15 +4,12 @@ import './index.css'
 import App from './App.tsx'
 import { WorkoutProvider } from './context/WorkoutContext.tsx'
 import { ThemeProvider } from './context/ThemeContext.tsx'
-import { AICoachProvider } from './context/AICoachContext.tsx'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ThemeProvider>
       <WorkoutProvider>
-        <AICoachProvider>
-          <App />
-        </AICoachProvider>
+        <App />
       </WorkoutProvider>
     </ThemeProvider>
   </StrictMode>,

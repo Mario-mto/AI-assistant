@@ -1,3 +1,4 @@
+import { memo, useMemo, useCallback } from 'react'
 import type { Session, Exercise, Program } from '../../types'
 import Card from '../ui/Card'
 import { formatDate, isToday } from '../../utils/date'
@@ -9,25 +10,25 @@ interface RecentSessionsProps {
   limit?: number
 }
 
-export default function RecentSessions({
+function RecentSessions({
   sessions,
   exercises,
   programs,
   limit = 5,
 }: RecentSessionsProps) {
-  const recentSessions = sessions.slice(0, limit)
+  const recentSessions = useMemo(() => sessions.slice(0, limit), [sessions, limit])
 
-  const getExerciseName = (exerciseId: string) => {
+  const getExerciseName = useCallback((exerciseId: string) => {
     return exercises.find((ex) => ex.id === exerciseId)?.name || 'Exercice supprimé'
-  }
+  }, [exercises])
 
-  const getProgramName = (programId: string) => {
+  const getProgramName = useCallback((programId: string) => {
     return programs.find((prog) => prog.id === programId)?.name || 'Programme supprimé'
-  }
+  }, [programs])
 
-  const getTotalReps = (sets: number[]) => {
+  const getTotalReps = useCallback((sets: number[]) => {
     return sets.reduce((sum, reps) => sum + reps, 0)
-  }
+  }, [])
 
   if (recentSessions.length === 0) {
     return (
@@ -104,3 +105,5 @@ export default function RecentSessions({
     </Card>
   )
 }
+
+export default memo(RecentSessions)

@@ -1,3 +1,4 @@
+import { memo, useMemo } from 'react'
 import type { Session } from '../../types'
 import Card from '../ui/Card'
 import { formatDateShort } from '../../utils/date'
@@ -7,7 +8,7 @@ interface ProgressChartProps {
   exerciseName?: string
 }
 
-export default function ProgressChart({
+function ProgressChart({
   sessions,
   exerciseName = 'Toutes les séances',
 }: ProgressChartProps) {
@@ -22,51 +23,72 @@ export default function ProgressChart({
     )
   }
 
-  // Prendre les 10 dernières séances pour le graphique
-  const recentSessions = sessions.slice(0, 10).reverse()
+  // Memoize all expensive chart calculations
+  const chartData = useMemo(() => {
+    // Prendre les 10 dernières séances pour le graphique
+    const recentSessions = sessions.slice(0, 10).reverse()
 
-  // Calculer le total de reps par séance
-  const data = recentSessions.map((session) => ({
-    date: session.date,
-    totalReps: session.sets.reduce((sum, reps) => sum + reps, 0),
-  }))
+    // Calculer le total de reps par séance
+    const data = recentSessions.map((session) => ({
+      date: session.date,
+      totalReps: session.sets.reduce((sum, reps) => sum + reps, 0),
+    }))
 
-  // Dimensions du graphique
-  const width = 800
-  const height = 300
-  const padding = 40
-  const chartWidth = width - padding * 2
-  const chartHeight = height - padding * 2
+    // Dimensions du graphique
+    const width = 800
+    const height = 300
+    const padding = 40
+    const chartWidth = width - padding * 2
+    const chartHeight = height - padding * 2
 
-  // Trouver min/max pour l'échelle
-  const maxReps = Math.max(...data.map((d) => d.totalReps))
-  const minReps = Math.min(...data.map((d) => d.totalReps))
-  const range = maxReps - minReps || 1
+    // Trouver min/max pour l'échelle
+    const maxReps = Math.max(...data.map((d) => d.totalReps))
+    const minReps = Math.min(...data.map((d) => d.totalReps))
+    const range = maxReps - minReps || 1
 
-  // Fonction pour calculer la position Y (inversée car SVG part du haut)
-  const getY = (reps: number) => {
-    return padding + chartHeight - ((reps - minReps) / range) * chartHeight
-  }
+    // Fonction pour calculer la position Y (inversée car SVG part du haut)
+    const getY = (reps: number) => {
+      return padding + chartHeight - ((reps - minReps) / range) * chartHeight
+    }
 
-  // Fonction pour calculer la position X
-  const getX = (index: number) => {
-    const step = chartWidth / (data.length - 1 || 1)
-    return padding + index * step
-  }
+    // Fonction pour calculer la position X
+    const getX = (index: number) => {
+      const step = chartWidth / (data.length - 1 || 1)
+      return padding + index * step
+    }
 
-  // Générer les points pour la ligne
-  const linePoints = data
-    .map((d, i) => `${getX(i)},${getY(d.totalReps)}`)
-    .join(' ')
+    // Générer les points pour la ligne
+    const linePoints = data
+      .map((d, i) => `${getX(i)},${getY(d.totalReps)}`)
+      .join(' ')
 
-  // Générer le path pour l'aire sous la courbe
-  const areaPath = `
-    M ${getX(0)},${getY(data[0].totalReps)}
-    ${data.map((d, i) => `L ${getX(i)},${getY(d.totalReps)}`).join(' ')}
-    L ${getX(data.length - 1)},${padding + chartHeight}
-    L ${getX(0)},${padding + chartHeight}
-    Z
-  `
+    // Générer le path pour l'aire sous la courbe
+    const areaPath = `
+      M ${getX(0)},${getY(data[0].totalReps)}
+      ${data.map((d, i) => `L ${getX(i)},${getY(d.totalReps)}`).join(' ')}
+      L ${getX(data.length - 1)},${padding + chartHeight}
+      L ${getX(0)},${padding + chartHeight}
+      Z
+    `
+
+    return {
+      data,
+      width,
+      height,
+      padding,
+      chartWidth,
+      chartHeight,
+      maxReps,
+      minReps,
+      range,
+      getY,
+      getX,
+      linePoints,
+      areaPath
+    }
+  }, [sessions])
+
+  const { data, width, height, padding, chartHeight, range, minReps, getY, getX, linePoints, areaPath } = chartData
 
   return (
     <Card>
@@ -169,3 +191,5 @@ export default function ProgressChart({
     </Card>
   )
 }
+
+export default memo(ProgressChart)

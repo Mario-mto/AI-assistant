@@ -6,19 +6,17 @@ interface TimerProps {
   autoStart?: boolean
 }
 
-// Fonction pour jouer un son de notification
 const playNotificationSound = () => {
   try {
     const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)()
 
-    // Créer un son de "ding" agréable
     const oscillator = audioContext.createOscillator()
     const gainNode = audioContext.createGain()
 
     oscillator.connect(gainNode)
     gainNode.connect(audioContext.destination)
 
-    oscillator.frequency.setValueAtTime(880, audioContext.currentTime) // La note A5
+    oscillator.frequency.setValueAtTime(880, audioContext.currentTime)
     oscillator.type = 'sine'
 
     gainNode.gain.setValueAtTime(0.3, audioContext.currentTime)
@@ -27,7 +25,6 @@ const playNotificationSound = () => {
     oscillator.start(audioContext.currentTime)
     oscillator.stop(audioContext.currentTime + 0.5)
 
-    // Deuxième note pour un effet "ding-dong"
     setTimeout(() => {
       const osc2 = audioContext.createOscillator()
       const gain2 = audioContext.createGain()
@@ -35,7 +32,7 @@ const playNotificationSound = () => {
       osc2.connect(gain2)
       gain2.connect(audioContext.destination)
 
-      osc2.frequency.setValueAtTime(1320, audioContext.currentTime) // La note E6
+      osc2.frequency.setValueAtTime(1320, audioContext.currentTime)
       osc2.type = 'sine'
 
       gain2.gain.setValueAtTime(0.3, audioContext.currentTime)
@@ -45,19 +42,17 @@ const playNotificationSound = () => {
       osc2.stop(audioContext.currentTime + 0.5)
     }, 150)
   } catch (error) {
-    console.log('Audio non supporté:', error)
+    console.log('Audio non supporte:', error)
   }
 }
 
-// Fonction pour vibrer (mobile)
 const vibrateDevice = () => {
   try {
     if ('vibrate' in navigator) {
-      // Pattern: vibration 200ms, pause 100ms, vibration 200ms
       navigator.vibrate([200, 100, 200])
     }
   } catch (error) {
-    console.log('Vibration non supportée:', error)
+    console.log('Vibration non supportee:', error)
   }
 }
 
@@ -66,16 +61,14 @@ export default function Timer({ seconds, onComplete, autoStart = false }: TimerP
   const [isRunning, setIsRunning] = useState(autoStart)
   const hasNotified = useRef(false)
 
-  // Reset timer quand les secondes changent
   useEffect(() => {
     setTimeLeft(seconds)
-    hasNotified.current = false // Reset notification flag
+    hasNotified.current = false
     if (autoStart) {
       setIsRunning(true)
     }
   }, [seconds, autoStart])
 
-  // Countdown logic
   useEffect(() => {
     if (!isRunning || timeLeft <= 0) return
 
@@ -83,7 +76,6 @@ export default function Timer({ seconds, onComplete, autoStart = false }: TimerP
       setTimeLeft((prev) => {
         if (prev <= 1) {
           setIsRunning(false)
-          // Jouer le son et vibrer quand le timer se termine
           if (!hasNotified.current) {
             hasNotified.current = true
             playNotificationSound()
@@ -102,58 +94,133 @@ export default function Timer({ seconds, onComplete, autoStart = false }: TimerP
   const minutes = Math.floor(timeLeft / 60)
   const remainingSeconds = timeLeft % 60
   const percentage = (timeLeft / seconds) * 100
+  const isComplete = timeLeft === 0
+  const circumference = 2 * Math.PI * 58
 
   const toggleTimer = () => {
     if (timeLeft > 0) {
       setIsRunning(!isRunning)
     } else {
-      // Reset
       setTimeLeft(seconds)
       setIsRunning(true)
     }
   }
 
   return (
-    <div className="flex flex-col items-center">
-      {/* Progress circle */}
-      <div className="relative w-32 h-32">
-        <svg className="transform -rotate-90 w-32 h-32">
+    <div className="flex flex-col items-center py-6">
+      {/* Progress circle with glow */}
+      <div className="relative w-40 h-40">
+        {/* Glow effect */}
+        <div
+          className={`
+            absolute inset-0 rounded-full blur-xl transition-opacity duration-500
+            ${isComplete ? 'bg-emerald-500/30' : 'bg-energy-500/20'}
+            ${isRunning ? 'opacity-100 animate-pulse-glow' : 'opacity-50'}
+          `}
+        />
+
+        {/* SVG Ring */}
+        <svg className="relative w-40 h-40 progress-ring" viewBox="0 0 120 120">
+          {/* Background ring */}
           <circle
-            cx="64"
-            cy="64"
-            r="56"
-            stroke="#e5e7eb"
-            strokeWidth="8"
+            cx="60"
+            cy="60"
+            r="58"
             fill="none"
+            strokeWidth="4"
+            className="stroke-gray-200 dark:stroke-gray-700"
           />
+          {/* Progress ring */}
           <circle
-            cx="64"
-            cy="64"
-            r="56"
-            stroke={timeLeft === 0 ? '#10b981' : '#3b82f6'}
-            strokeWidth="8"
+            cx="60"
+            cy="60"
+            r="58"
             fill="none"
-            strokeDasharray={`${2 * Math.PI * 56}`}
-            strokeDashoffset={`${2 * Math.PI * 56 * (1 - percentage / 100)}`}
-            className="transition-all duration-1000 ease-linear"
+            strokeWidth="4"
+            strokeLinecap="round"
+            className={`
+              progress-ring-circle
+              ${isComplete ? 'stroke-emerald-500' : 'stroke-energy-500'}
+            `}
+            style={{
+              strokeDasharray: circumference,
+              strokeDashoffset: circumference * (1 - percentage / 100),
+            }}
           />
+          {/* Gradient definition */}
+          <defs>
+            <linearGradient id="timerGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#f97316" />
+              <stop offset="100%" stopColor="#a855f7" />
+            </linearGradient>
+          </defs>
         </svg>
+
+        {/* Center content */}
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="text-center">
-            <div className="text-3xl font-bold">
+            <div
+              className={`
+                text-4xl font-display font-bold tracking-tight
+                ${isComplete ? 'text-emerald-500' : 'text-gray-800 dark:text-white'}
+              `}
+            >
               {minutes}:{remainingSeconds.toString().padStart(2, '0')}
             </div>
-            {timeLeft === 0 && <div className="text-green-600 text-sm">Repos terminé!</div>}
+            {isComplete && (
+              <div className="text-emerald-500 text-sm font-semibold mt-1 animate-fade-in">
+                Repos termine!
+              </div>
+            )}
+            {!isComplete && !isRunning && timeLeft < seconds && (
+              <div className="text-gray-400 text-xs font-medium mt-1">
+                En pause
+              </div>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Controls */}
+      {/* Control button */}
       <button
         onClick={toggleTimer}
-        className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+        className={`
+          mt-6 px-8 py-3 rounded-xl font-bold text-white
+          transition-all duration-300 transform
+          active:scale-95 touch-feedback
+          ${isComplete
+            ? 'bg-gradient-to-r from-emerald-500 to-green-600 shadow-[0_4px_15px_-3px_rgba(34,197,94,0.4)] hover:shadow-[0_8px_25px_-5px_rgba(34,197,94,0.5)]'
+            : 'btn-energy'
+          }
+          hover:-translate-y-0.5
+        `}
       >
-        {timeLeft === 0 ? 'Recommencer' : isRunning ? 'Pause' : 'Démarrer'}
+        <span className="flex items-center gap-2">
+          {isComplete ? (
+            <>
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                <path d="M3 3v5h5" />
+              </svg>
+              Recommencer
+            </>
+          ) : isRunning ? (
+            <>
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                <rect x="6" y="4" width="4" height="16" rx="1" />
+                <rect x="14" y="4" width="4" height="16" rx="1" />
+              </svg>
+              Pause
+            </>
+          ) : (
+            <>
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                <polygon points="5,3 19,12 5,21" />
+              </svg>
+              Demarrer
+            </>
+          )}
+        </span>
       </button>
     </div>
   )

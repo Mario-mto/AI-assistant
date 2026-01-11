@@ -18,18 +18,35 @@ export default function Input({
     <div className="mb-4">
       <label
         htmlFor={inputId}
-        className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+        className="block text-sm font-semibold text-gray-600 dark:text-gray-300 mb-2 uppercase tracking-wide"
       >
         {label}
       </label>
       <input
         id={inputId}
-        className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 ${
-          error ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-        } ${className}`}
+        className={`
+          w-full px-4 py-3 rounded-xl
+          bg-white/80 dark:bg-gray-800/60
+          backdrop-blur-sm
+          border-2 transition-all duration-200
+          text-gray-900 dark:text-gray-100
+          font-medium
+          placeholder:text-gray-400 dark:placeholder:text-gray-500
+          focus:outline-none focus:ring-0
+          ${error
+            ? 'border-red-500 focus:border-red-500'
+            : 'border-gray-200/50 dark:border-white/10 focus:border-energy-500 dark:focus:border-energy-400'
+          }
+          hover:border-gray-300 dark:hover:border-white/20
+          ${className}
+        `}
         {...props}
       />
-      {error && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{error}</p>}
+      {error && (
+        <p className="mt-2 text-sm text-red-500 dark:text-red-400 font-medium">
+          {error}
+        </p>
+      )}
     </div>
   )
 }
