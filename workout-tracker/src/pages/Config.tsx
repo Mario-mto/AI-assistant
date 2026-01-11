@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useWorkout } from '../context/WorkoutContext'
 import { useTheme } from '../context/ThemeContext'
 import type { Exercise, Program } from '../types'
@@ -23,7 +23,11 @@ export default function Config() {
     addProgram,
     updateProgram,
     deleteProgram,
+    exportData,
+    importData,
   } = useWorkout()
+
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const { theme, toggleTheme } = useTheme()
 
@@ -49,6 +53,9 @@ export default function Config() {
     message: '',
     onConfirm: () => {},
   })
+
+  // État pour le feedback import/export
+  const [importStatus, setImportStatus] = useState<'idle' | 'success' | 'error'>('idle')
 
   // === HANDLERS EXERCICES ===
 
@@ -119,6 +126,40 @@ export default function Config() {
     })
   }
 
+  // === HANDLERS IMPORT/EXPORT ===
+
+  const handleExport = () => {
+    const jsonData = exportData()
+    const blob = new Blob([jsonData], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `workout-backup-${new Date().toISOString().split('T')[0]}.json`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  }
+
+  const handleImportClick = () => {
+    fileInputRef.current?.click()
+  }
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    const reader = new FileReader()
+    reader.onload = (event) => {
+      const content = event.target?.result as string
+      const success = importData(content)
+      setImportStatus(success ? 'success' : 'error')
+      setTimeout(() => setImportStatus('idle'), 3000)
+    }
+    reader.readAsText(file)
+    e.target.value = ''
+  }
+
   return (
     <div className="animate-fade-in">
       <header className="mb-8">
@@ -171,6 +212,53 @@ export default function Config() {
               `}
             />
           </button>
+        </div>
+
+        {/* Sauvegarde des donnees */}
+        <div className="mt-4 p-4 bg-white/50 dark:bg-white/5 rounded-xl">
+          <div className="flex items-center gap-3 mb-3">
+            <span className="text-2xl">💾</span>
+            <div>
+              <p className="font-semibold text-gray-800 dark:text-white">Sauvegarde</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Exporter ou importer tes donnees
+              </p>
+            </div>
+          </div>
+
+          <div className="flex gap-2">
+            <button
+              onClick={handleExport}
+              className="flex-1 px-4 py-2 rounded-xl font-semibold text-sm bg-gradient-to-r from-energy-500 to-energy-600 text-white shadow-energy hover:shadow-lg transition-all duration-300"
+            >
+              Exporter JSON
+            </button>
+            <button
+              onClick={handleImportClick}
+              className="flex-1 px-4 py-2 rounded-xl font-semibold text-sm glass text-gray-700 dark:text-gray-200 hover:bg-white/80 dark:hover:bg-white/10 transition-all duration-300"
+            >
+              Importer JSON
+            </button>
+          </div>
+
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".json"
+            onChange={handleFileChange}
+            className="hidden"
+          />
+
+          {importStatus === 'success' && (
+            <p className="mt-2 text-sm text-emerald-600 dark:text-emerald-400 font-medium">
+              Donnees importees avec succes !
+            </p>
+          )}
+          {importStatus === 'error' && (
+            <p className="mt-2 text-sm text-red-600 dark:text-red-400 font-medium">
+              Erreur lors de l'import. Verifiez le fichier.
+            </p>
+          )}
         </div>
       </Card>
 

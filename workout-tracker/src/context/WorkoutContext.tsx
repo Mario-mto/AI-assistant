@@ -39,6 +39,10 @@ type WorkoutContextType = {
   // Helpers
   getSessionsByExercise: (exerciseId: string) => Session[]
   getLastSession: (exerciseId: string, programId: string) => Session | undefined
+
+  // Import/Export
+  exportData: () => string
+  importData: (jsonString: string) => boolean
 }
 
 const WorkoutContext = createContext<WorkoutContextType | undefined>(undefined)
@@ -151,6 +155,33 @@ export function WorkoutProvider({ children }: { children: ReactNode }) {
       .sort((a, b) => b.date.localeCompare(a.date))[0]
   }, [sessions])
 
+  // ========== IMPORT/EXPORT ==========
+
+  const exportData = useCallback((): string => {
+    const data = {
+      version: 1,
+      exportDate: new Date().toISOString(),
+      exercises,
+      programs,
+      sessions,
+      cardioSessions,
+    }
+    return JSON.stringify(data, null, 2)
+  }, [exercises, programs, sessions, cardioSessions])
+
+  const importData = useCallback((jsonString: string): boolean => {
+    try {
+      const data = JSON.parse(jsonString)
+      if (data.exercises) setExercises(data.exercises)
+      if (data.programs) setPrograms(data.programs)
+      if (data.sessions) setSessions(data.sessions)
+      if (data.cardioSessions) setCardioSessions(data.cardioSessions)
+      return true
+    } catch {
+      return false
+    }
+  }, [setExercises, setPrograms, setSessions, setCardioSessions])
+
   const value = useMemo<WorkoutContextType>(() => ({
     exercises,
     programs,
@@ -171,6 +202,8 @@ export function WorkoutProvider({ children }: { children: ReactNode }) {
     deleteCardioSession,
     getSessionsByExercise,
     getLastSession,
+    exportData,
+    importData,
   }), [
     exercises,
     programs,
@@ -191,6 +224,8 @@ export function WorkoutProvider({ children }: { children: ReactNode }) {
     deleteCardioSession,
     getSessionsByExercise,
     getLastSession,
+    exportData,
+    importData,
   ])
 
   return <WorkoutContext.Provider value={value}>{children}</WorkoutContext.Provider>
