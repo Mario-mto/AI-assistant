@@ -10,6 +10,8 @@ import Timer from '../components/ui/Timer'
 import ConfirmModal from '../components/ui/ConfirmModal'
 import { useEmomTimer } from '../hooks/useEmomTimer'
 import EmomTimer from '../components/session/EmomTimer'
+import PyramidProgress from '../components/session/PyramidProgress'
+import { isPyramidComplete } from '../utils/defaultReps'
 
 type SessionState = 'setup' | 'active' | 'resting'
 
@@ -44,7 +46,13 @@ export default function ActiveSession() {
   }
 
   const handleValidateSet = (reps: number) => {
-    setCompletedSets([...completedSets, reps])
+    const newCompletedSets = [...completedSets, reps]
+    setCompletedSets(newCompletedSets)
+
+    // Check if pyramid is complete
+    if (isPyramidMode && selectedExercise && isPyramidComplete(newCompletedSets.length, selectedExercise.goal)) {
+      setShowPyramidComplete(true)
+    }
 
     if (isEmomMode) {
       // EMOM: mark work done, wait for minute to complete
@@ -113,6 +121,10 @@ export default function ActiveSession() {
   // EMOM mode detection
   const isEmomMode = !!selectedProgram?.emomSeconds
   const emomSeconds = selectedProgram?.emomSeconds || 60
+
+  // Pyramid mode detection
+  const isPyramidMode = selectedProgram?.defaultRepsPattern === 'pyramid'
+  const [showPyramidComplete, setShowPyramidComplete] = useState(false)
 
   const handleEmomMinuteComplete = () => {
     // Auto-advance to next set when minute completes
@@ -334,6 +346,15 @@ export default function ActiveSession() {
         </div>
       </header>
 
+      {isPyramidMode && selectedExercise && (
+        <Card variant="glass" className="mb-4">
+          <PyramidProgress
+            currentSetIndex={currentSetIndex}
+            goal={selectedExercise.goal}
+          />
+        </Card>
+      )}
+
       <SetLogger
         setNumber={currentSetIndex + 1}
         defaultReps={getDefaultRepsForCurrentSet()}
@@ -403,6 +424,16 @@ export default function ActiveSession() {
         message="Fais au moins une serie avant de terminer."
         confirmText="Compris"
         cancelText="Fermer"
+      />
+
+      <ConfirmModal
+        isOpen={showPyramidComplete}
+        onClose={() => setShowPyramidComplete(false)}
+        onConfirm={handleConfirmEnd}
+        title="Pyramide terminee!"
+        message={`Bravo! Tu as complete la pyramide (${completedSets.length} series). Enregistrer la seance?`}
+        confirmText="Enregistrer"
+        cancelText="Continuer"
       />
     </div>
   )
