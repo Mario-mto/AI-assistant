@@ -61,3 +61,58 @@ export function getDefaultReps(
 export function getPyramidTotalSets(goal: number): number {
   return goal * 2 - 1
 }
+
+export type PyramidPhase = 'ascending' | 'peak' | 'descending' | 'complete'
+
+export interface PyramidPosition {
+  phase: PyramidPhase
+  currentReps: number
+  currentSet: number
+  totalSets: number
+  setsRemaining: number
+}
+
+/**
+ * Check if a pyramid pattern is complete
+ */
+export function isPyramidComplete(completedSets: number, goal: number): boolean {
+  return completedSets >= getPyramidTotalSets(goal)
+}
+
+/**
+ * Get current position in pyramid pattern
+ */
+export function getPyramidPosition(setIndex: number, goal: number): PyramidPosition {
+  const totalSets = getPyramidTotalSets(goal)
+  const pattern = generatePyramidPattern(goal)
+
+  if (setIndex >= totalSets) {
+    return {
+      phase: 'complete',
+      currentReps: 0,
+      currentSet: totalSets + 1,
+      totalSets,
+      setsRemaining: 0
+    }
+  }
+
+  const currentReps = pattern[setIndex]
+  const peakIndex = goal - 1
+
+  let phase: PyramidPhase
+  if (setIndex < peakIndex) {
+    phase = 'ascending'
+  } else if (setIndex === peakIndex) {
+    phase = 'peak'
+  } else {
+    phase = 'descending'
+  }
+
+  return {
+    phase,
+    currentReps,
+    currentSet: setIndex + 1,
+    totalSets,
+    setsRemaining: totalSets - setIndex - 1
+  }
+}
