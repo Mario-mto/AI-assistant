@@ -8,6 +8,8 @@ import Card from '../components/ui/Card'
 import SetLogger from '../components/session/SetLogger'
 import Timer from '../components/ui/Timer'
 import ConfirmModal from '../components/ui/ConfirmModal'
+import { useEmomTimer } from '../hooks/useEmomTimer'
+import EmomTimer from '../components/session/EmomTimer'
 
 type SessionState = 'setup' | 'active' | 'resting'
 
@@ -33,13 +35,26 @@ export default function ActiveSession() {
     setSessionState('active')
     setCompletedSets([])
     setCurrentSetIndex(0)
+
+    // Start EMOM timer if in EMOM mode
+    if (isEmomMode) {
+      emomTimer.reset()
+      emomTimer.start()
+    }
   }
 
   const handleValidateSet = (reps: number) => {
     setCompletedSets([...completedSets, reps])
-    if (selectedProgram?.restSeconds || selectedProgram?.emomSeconds) {
+
+    if (isEmomMode) {
+      // EMOM: mark work done, wait for minute to complete
+      emomTimer.markSetComplete()
+      setSessionState('resting')
+    } else if (selectedProgram?.restSeconds) {
+      // Standard rest timer
       setSessionState('resting')
     } else {
+      // No timer - immediate next set
       setCurrentSetIndex((prev) => prev + 1)
     }
   }
@@ -94,6 +109,20 @@ export default function ActiveSession() {
   }
 
   const restSeconds = selectedProgram?.restSeconds || selectedProgram?.emomSeconds || 60
+
+  // EMOM mode detection
+  const isEmomMode = !!selectedProgram?.emomSeconds
+  const emomSeconds = selectedProgram?.emomSeconds || 60
+
+  const handleEmomMinuteComplete = () => {
+    // Auto-advance to next set when minute completes
+    setCurrentSetIndex((prev) => prev + 1)
+    if (sessionState === 'resting') {
+      setSessionState('active')
+    }
+  }
+
+  const emomTimer = useEmomTimer(emomSeconds, handleEmomMinuteComplete)
 
   const exerciseOptions = exercises.map((ex) => ({
     value: ex.id,
@@ -219,14 +248,30 @@ export default function ActiveSession() {
         </header>
 
         <Card variant="glass" className="mb-6">
-          <h2 className="text-lg font-display font-bold text-center mb-2">Temps de repos</h2>
-          <Timer seconds={restSeconds} onComplete={handleRestComplete} autoStart={true} />
+          {isEmomMode ? (
+            <>
+              <h2 className="text-lg font-display font-bold text-center mb-2">EMOM</h2>
+              <EmomTimer
+                timeLeft={emomTimer.timeLeft}
+                totalSeconds={emomSeconds}
+                isWorkPhase={emomTimer.isWorkPhase}
+                isRunning={emomTimer.isRunning}
+              />
+            </>
+          ) : (
+            <>
+              <h2 className="text-lg font-display font-bold text-center mb-2">Temps de repos</h2>
+              <Timer seconds={restSeconds} onComplete={handleRestComplete} autoStart={true} />
+            </>
+          )}
         </Card>
 
         <div className="flex gap-3 mb-6">
-          <Button variant="secondary" onClick={handleRestComplete} fullWidth>
-            Passer
-          </Button>
+          {!isEmomMode && (
+            <Button variant="secondary" onClick={handleRestComplete} fullWidth>
+              Passer
+            </Button>
+          )}
           <Button variant="danger" onClick={handleEndSession} fullWidth>
             Terminer
           </Button>
@@ -294,6 +339,17 @@ export default function ActiveSession() {
         defaultReps={getDefaultRepsForCurrentSet()}
         onValidate={handleValidateSet}
       />
+
+      {isEmomMode && (
+        <Card variant="glass" className="mt-4">
+          <EmomTimer
+            timeLeft={emomTimer.timeLeft}
+            totalSeconds={emomSeconds}
+            isWorkPhase={emomTimer.isWorkPhase}
+            isRunning={emomTimer.isRunning}
+          />
+        </Card>
+      )}
 
       <div className="mt-4 flex gap-3">
         <Button variant="secondary" onClick={handleCancelSession} fullWidth>
