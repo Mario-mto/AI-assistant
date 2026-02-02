@@ -67,10 +67,24 @@ export function getDefaultReps(
  * Calcule le nombre total de séries pour un pattern pyramidal
  *
  * @param goal - Valeur max du pattern
+ * @param direction - Direction of the pyramid (ascending, descending, both)
+ * @param startRep - Starting rep count (default 1)
  * @returns number - Nombre de séries dans le pattern complet
  */
-export function getPyramidTotalSets(goal: number): number {
-  return goal * 2 - 1
+export function getPyramidTotalSets(
+  goal: number,
+  direction: PyramidDirection = 'both',
+  startRep: number = 1
+): number {
+  const clampedStart = Math.max(1, Math.min(startRep, goal))
+  const steps = goal - clampedStart + 1
+
+  if (direction === 'ascending' || direction === 'descending') {
+    return steps
+  }
+
+  // 'both': up + down - 1 (don't count peak twice)
+  return steps * 2 - 1
 }
 
 export type PyramidPhase = 'ascending' | 'peak' | 'descending' | 'complete'

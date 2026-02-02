@@ -36,6 +36,22 @@ describe('getPyramidTotalSets', () => {
   it('returns correct total for goal 5', () => {
     expect(getPyramidTotalSets(5)).toBe(9)
   })
+
+  it('returns correct total for ascending (goal=8, start=3)', () => {
+    expect(getPyramidTotalSets(8, 'ascending', 3)).toBe(6)
+  })
+
+  it('returns correct total for descending (goal=8, start=3)', () => {
+    expect(getPyramidTotalSets(8, 'descending', 3)).toBe(6)
+  })
+
+  it('returns correct total for both (goal=8, start=3)', () => {
+    expect(getPyramidTotalSets(8, 'both', 3)).toBe(11)
+  })
+
+  it('defaults to both with start=1', () => {
+    expect(getPyramidTotalSets(5)).toBe(9)
+  })
 })
 
 describe('isPyramidComplete', () => {
