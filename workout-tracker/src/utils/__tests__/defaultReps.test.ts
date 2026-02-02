@@ -66,6 +66,20 @@ describe('isPyramidComplete', () => {
   it('returns true when exceeded', () => {
     expect(isPyramidComplete(10, 5)).toBe(true)
   })
+
+  it('works with ascending direction', () => {
+    expect(isPyramidComplete(5, 8, 'ascending', 3)).toBe(false)
+    expect(isPyramidComplete(6, 8, 'ascending', 3)).toBe(true)
+  })
+
+  it('works with descending direction', () => {
+    expect(isPyramidComplete(6, 8, 'descending', 3)).toBe(true)
+  })
+
+  it('works with both direction', () => {
+    expect(isPyramidComplete(10, 8, 'both', 3)).toBe(false)
+    expect(isPyramidComplete(11, 8, 'both', 3)).toBe(true)
+  })
 })
 
 describe('getPyramidPosition', () => {

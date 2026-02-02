@@ -100,8 +100,13 @@ export interface PyramidPosition {
 /**
  * Check if a pyramid pattern is complete
  */
-export function isPyramidComplete(completedSets: number, goal: number): boolean {
-  return completedSets >= getPyramidTotalSets(goal)
+export function isPyramidComplete(
+  completedSets: number,
+  goal: number,
+  direction: PyramidDirection = 'both',
+  startRep: number = 1
+): boolean {
+  return completedSets >= getPyramidTotalSets(goal, direction, startRep)
 }
 
 /**
