@@ -112,9 +112,14 @@ export function isPyramidComplete(
 /**
  * Get current position in pyramid pattern
  */
-export function getPyramidPosition(setIndex: number, goal: number): PyramidPosition {
-  const totalSets = getPyramidTotalSets(goal)
-  const pattern = generatePyramidPattern(goal)
+export function getPyramidPosition(
+  setIndex: number,
+  goal: number,
+  direction: PyramidDirection = 'both',
+  startRep: number = 1
+): PyramidPosition {
+  const totalSets = getPyramidTotalSets(goal, direction, startRep)
+  const pattern = generatePyramidPattern(goal, direction, startRep)
 
   if (setIndex >= totalSets) {
     return {
@@ -127,15 +132,22 @@ export function getPyramidPosition(setIndex: number, goal: number): PyramidPosit
   }
 
   const currentReps = pattern[setIndex]
-  const peakIndex = goal - 1
 
   let phase: PyramidPhase
-  if (setIndex < peakIndex) {
-    phase = 'ascending'
-  } else if (setIndex === peakIndex) {
-    phase = 'peak'
+  if (direction === 'ascending') {
+    phase = setIndex === totalSets - 1 ? 'peak' : 'ascending'
+  } else if (direction === 'descending') {
+    phase = setIndex === 0 ? 'peak' : 'descending'
   } else {
-    phase = 'descending'
+    // 'both'
+    const peakIndex = goal - startRep
+    if (setIndex < peakIndex) {
+      phase = 'ascending'
+    } else if (setIndex === peakIndex) {
+      phase = 'peak'
+    } else {
+      phase = 'descending'
+    }
   }
 
   return {

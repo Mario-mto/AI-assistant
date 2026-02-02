@@ -107,4 +107,30 @@ describe('getPyramidPosition', () => {
     const pos = getPyramidPosition(9, 5)
     expect(pos.phase).toBe('complete')
   })
+
+  it('handles ascending direction', () => {
+    const pos = getPyramidPosition(2, 8, 'ascending', 3)
+    expect(pos.phase).toBe('ascending')
+    expect(pos.currentReps).toBe(5)
+    expect(pos.totalSets).toBe(6)
+  })
+
+  it('handles descending direction at start', () => {
+    const pos = getPyramidPosition(0, 8, 'descending', 3)
+    expect(pos.phase).toBe('peak')
+    expect(pos.currentReps).toBe(8)
+  })
+
+  it('handles both direction with startRep', () => {
+    const pos = getPyramidPosition(5, 8, 'both', 3)
+    expect(pos.phase).toBe('peak')
+    expect(pos.currentReps).toBe(8)
+    expect(pos.totalSets).toBe(11)
+  })
+
+  it('handles both direction descending phase', () => {
+    const pos = getPyramidPosition(8, 8, 'both', 3)
+    expect(pos.phase).toBe('descending')
+    expect(pos.currentReps).toBe(5)
+  })
 })
