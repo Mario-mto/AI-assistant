@@ -6,6 +6,8 @@
  */
 export type RepsPattern = 'pyramid' | 'fixed' | 'lastPerf'
 
+export type PyramidDirection = 'ascending' | 'descending' | 'both'
+
 /**
  * Programme d'entraînement
  */
@@ -17,6 +19,8 @@ export type Program = {
   emomSeconds?: number
   defaultRepsPattern: RepsPattern
   fixedReps?: number
+  pyramidDirection?: PyramidDirection
+  pyramidStartRep?: number
 }
 
 /**
