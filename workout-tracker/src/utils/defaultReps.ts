@@ -1,15 +1,26 @@
-import type { Program, Session } from '../types'
+import type { Program, Session, PyramidDirection } from '../types'
 
 /**
- * Génère un pattern pyramidal basé sur un goal
- * Ex: goal=5 -> [1, 2, 3, 4, 5, 4, 3, 2, 1]
- *
- * @param goal - Valeur max du pattern
- * @returns number[] - Pattern pyramidal
+ * Generates a pyramid pattern based on goal, direction, and start rep
  */
-export function generatePyramidPattern(goal: number): number[] {
-  const ascending = Array.from({ length: goal }, (_, i) => i + 1)
-  const descending = Array.from({ length: goal - 1 }, (_, i) => goal - i - 1)
+export function generatePyramidPattern(
+  goal: number,
+  direction: PyramidDirection = 'both',
+  startRep: number = 1
+): number[] {
+  const clampedStart = Math.max(1, Math.min(startRep, goal))
+
+  if (direction === 'ascending') {
+    return Array.from({ length: goal - clampedStart + 1 }, (_, i) => clampedStart + i)
+  }
+
+  if (direction === 'descending') {
+    return Array.from({ length: goal - clampedStart + 1 }, (_, i) => goal - i)
+  }
+
+  // 'both' - ascending then descending back to start
+  const ascending = Array.from({ length: goal - clampedStart + 1 }, (_, i) => clampedStart + i)
+  const descending = Array.from({ length: goal - clampedStart }, (_, i) => goal - i - 1)
   return [...ascending, ...descending]
 }
 

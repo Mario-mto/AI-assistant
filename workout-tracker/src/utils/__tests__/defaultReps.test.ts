@@ -14,6 +14,22 @@ describe('generatePyramidPattern', () => {
   it('generates correct pattern for goal 3', () => {
     expect(generatePyramidPattern(3)).toEqual([1, 2, 3, 2, 1])
   })
+
+  it('generates ascending pattern with startRep', () => {
+    expect(generatePyramidPattern(8, 'ascending', 3)).toEqual([3, 4, 5, 6, 7, 8])
+  })
+
+  it('generates descending pattern with startRep', () => {
+    expect(generatePyramidPattern(8, 'descending', 3)).toEqual([8, 7, 6, 5, 4, 3])
+  })
+
+  it('generates both pattern with startRep', () => {
+    expect(generatePyramidPattern(8, 'both', 3)).toEqual([3, 4, 5, 6, 7, 8, 7, 6, 5, 4, 3])
+  })
+
+  it('defaults to both direction starting at 1', () => {
+    expect(generatePyramidPattern(5)).toEqual([1, 2, 3, 4, 5, 4, 3, 2, 1])
+  })
 })
 
 describe('getPyramidTotalSets', () => {
