@@ -41,8 +41,9 @@ export function getDefaultReps(
 ): number {
   switch (program.defaultRepsPattern) {
     case 'pyramid': {
-      const pattern = generatePyramidPattern(exerciseGoal)
-      // Si l'index dépasse le pattern, on boucle
+      const direction = program.pyramidDirection ?? 'both'
+      const startRep = program.pyramidStartRep ?? 1
+      const pattern = generatePyramidPattern(exerciseGoal, direction, startRep)
       return pattern[setIndex % pattern.length]
     }
 
