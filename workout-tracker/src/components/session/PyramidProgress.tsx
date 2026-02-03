@@ -1,9 +1,12 @@
 import { generatePyramidPattern, getPyramidPosition } from '../../utils/defaultReps'
 import type { PyramidPhase } from '../../utils/defaultReps'
+import type { PyramidDirection } from '../../types'
 
 interface PyramidProgressProps {
   currentSetIndex: number
   goal: number
+  direction?: PyramidDirection
+  startRep?: number
 }
 
 const phaseLabels: Record<PyramidPhase, string> = {
@@ -20,9 +23,14 @@ const phaseColors: Record<PyramidPhase, string> = {
   complete: 'text-gray-500'
 }
 
-export default function PyramidProgress({ currentSetIndex, goal }: PyramidProgressProps) {
-  const position = getPyramidPosition(currentSetIndex, goal)
-  const pattern = generatePyramidPattern(goal)
+export default function PyramidProgress({
+  currentSetIndex,
+  goal,
+  direction = 'both',
+  startRep = 1
+}: PyramidProgressProps) {
+  const position = getPyramidPosition(currentSetIndex, goal, direction, startRep)
+  const pattern = generatePyramidPattern(goal, direction, startRep)
 
   return (
     <div className="bg-gray-100 dark:bg-gray-800 rounded-xl p-4">

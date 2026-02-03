@@ -431,6 +431,8 @@ export default function ActiveSession() {
           <PyramidProgress
             currentSetIndex={currentSetIndex}
             goal={selectedExercise.goal}
+            direction={sessionPyramidDirection}
+            startRep={sessionPyramidStartRep}
           />
         </Card>
       )}
