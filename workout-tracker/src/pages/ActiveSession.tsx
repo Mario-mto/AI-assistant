@@ -56,7 +56,12 @@ export default function ActiveSession() {
     setCompletedSets(newCompletedSets)
 
     // Check if pyramid is complete
-    if (isPyramidMode && selectedExercise && isPyramidComplete(newCompletedSets.length, selectedExercise.goal)) {
+    if (isPyramidMode && selectedExercise && isPyramidComplete(
+      newCompletedSets.length,
+      selectedExercise.goal,
+      sessionPyramidDirection,
+      sessionPyramidStartRep
+    )) {
       setShowPyramidComplete(true)
     }
 
@@ -119,7 +124,13 @@ export default function ActiveSession() {
   const getDefaultRepsForCurrentSet = (): number => {
     if (!selectedProgram || !selectedExercise) return 0
     const lastSession = getLastSession(selectedExerciseId, selectedProgramId)
-    return getDefaultReps(selectedProgram, currentSetIndex, selectedExercise.goal, lastSession)
+
+    // Use session-local pyramid config
+    const programWithSessionConfig = isPyramidMode
+      ? { ...selectedProgram, pyramidDirection: sessionPyramidDirection, pyramidStartRep: sessionPyramidStartRep }
+      : selectedProgram
+
+    return getDefaultReps(programWithSessionConfig, currentSetIndex, selectedExercise.goal, lastSession)
   }
 
   const restSeconds = selectedProgram?.restSeconds || selectedProgram?.emomSeconds || 60
