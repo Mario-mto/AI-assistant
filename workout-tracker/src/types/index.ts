@@ -59,3 +59,24 @@ export type CardioSession = {
   distance: number // kilomètres
   notes?: string
 }
+
+/**
+ * Type de recurrence pour seances planifiees
+ */
+export type RecurrenceType = 'none' | 'daily' | 'weekly' | 'monthly'
+
+/**
+ * Seance planifiee
+ */
+export type PlannedSession = {
+  id: string
+  exerciseId: string
+  programId: string
+  date: string           // ISO format YYYY-MM-DD
+  time?: string          // HH:mm (optionnel)
+  notes?: string
+  recurrenceType: RecurrenceType
+  recurrenceEndDate?: string  // Date de fin si recurrent
+  parentId?: string      // Si exception d'une serie recurrente
+  excludedDates?: string[] // Dates exclues de la recurrence
+}
