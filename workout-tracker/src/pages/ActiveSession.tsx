@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useWorkout } from '../context/WorkoutContext'
-import { getDefaultReps } from '../utils/defaultReps'
+import { getDefaultReps, generatePyramidPattern, getPyramidTotalSets } from '../utils/defaultReps'
+import type { PyramidDirection } from '../types'
 import Button from '../components/ui/Button'
 import Select from '../components/ui/Select'
+import Input from '../components/ui/Input'
 import Card from '../components/ui/Card'
 import SetLogger from '../components/session/SetLogger'
 import Timer from '../components/ui/Timer'
@@ -27,6 +29,10 @@ export default function ActiveSession() {
   const [showEndConfirm, setShowEndConfirm] = useState(false)
   const [showCancelConfirm, setShowCancelConfirm] = useState(false)
   const [showNoSetsAlert, setShowNoSetsAlert] = useState(false)
+
+  // Local pyramid config (can override program defaults)
+  const [sessionPyramidDirection, setSessionPyramidDirection] = useState<PyramidDirection>('both')
+  const [sessionPyramidStartRep, setSessionPyramidStartRep] = useState(1)
 
   const selectedExercise = exercises.find((ex) => ex.id === selectedExerciseId)
   const selectedProgram = programs.find((prog) => prog.id === selectedProgramId)
@@ -146,6 +152,31 @@ export default function ActiveSession() {
     label: prog.name,
   }))
 
+  // Sync pyramid config when program changes
+  const programPyramidDirection = selectedProgram?.pyramidDirection ?? 'both'
+  const programPyramidStartRep = selectedProgram?.pyramidStartRep ?? 1
+
+  // Reset local state when program changes (using useEffect pattern inline)
+  if (selectedProgram && sessionState === 'setup') {
+    if (sessionPyramidDirection !== programPyramidDirection && selectedProgram.defaultRepsPattern === 'pyramid') {
+      setSessionPyramidDirection(programPyramidDirection)
+    }
+    if (sessionPyramidStartRep !== programPyramidStartRep && selectedProgram.defaultRepsPattern === 'pyramid') {
+      setSessionPyramidStartRep(programPyramidStartRep)
+    }
+  }
+
+  // Pyramid preview for setup
+  const getPyramidPreview = () => {
+    if (!selectedExercise || !isPyramidMode) return null
+    const total = getPyramidTotalSets(selectedExercise.goal, sessionPyramidDirection, sessionPyramidStartRep)
+    const pattern = generatePyramidPattern(selectedExercise.goal, sessionPyramidDirection, sessionPyramidStartRep)
+    const first = pattern[0]
+    const last = pattern[pattern.length - 1]
+    const max = Math.max(...pattern)
+    return { total, first, last, max }
+  }
+
   // SETUP STATE
   if (sessionState === 'setup') {
     return (
@@ -222,6 +253,44 @@ export default function ActiveSession() {
                   )}
                   <p>Pattern: {selectedProgram.defaultRepsPattern}</p>
                 </div>
+              </div>
+            )}
+
+            {selectedProgram?.defaultRepsPattern === 'pyramid' && selectedExercise && (
+              <div className="mt-4 p-4 bg-energy-500/10 dark:bg-energy-500/20 rounded-xl border border-energy-500/20">
+                <p className="font-semibold text-energy-700 dark:text-energy-300 text-sm uppercase tracking-wide mb-3">
+                  Configuration Pyramide
+                </p>
+                <Select
+                  label="Direction"
+                  options={[
+                    { value: 'both', label: 'Montee + Descente' },
+                    { value: 'ascending', label: 'Montee seulement' },
+                    { value: 'descending', label: 'Descente seulement' },
+                  ]}
+                  value={sessionPyramidDirection}
+                  onChange={(e) => setSessionPyramidDirection(e.target.value as PyramidDirection)}
+                />
+                <Input
+                  label="Repetition de depart"
+                  type="number"
+                  value={sessionPyramidStartRep.toString()}
+                  onChange={(e) => setSessionPyramidStartRep(Math.max(1, Math.min(Number(e.target.value) || 1, selectedExercise.goal)))}
+                  min="1"
+                />
+                {(() => {
+                  const preview = getPyramidPreview()
+                  if (!preview) return null
+                  return (
+                    <div className="mt-3 text-sm text-gray-600 dark:text-gray-300">
+                      <span className="font-semibold">{preview.total} series</span>
+                      {' : '}
+                      {preview.first} → {preview.max}
+                      {sessionPyramidDirection === 'both' && ` → ${preview.last}`}
+                      {' (max: '}{preview.max}{' reps)'}
+                    </div>
+                  )
+                })()}
               </div>
             )}
 
