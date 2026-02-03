@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
-import type { Program, RepsPattern } from '../../types'
+import type { Program, RepsPattern, PyramidDirection } from '../../types'
 import Input from '../ui/Input'
 import Select from '../ui/Select'
 import Button from '../ui/Button'
@@ -14,6 +14,8 @@ interface ProgramFormProps {
     emomSeconds?: number
     defaultRepsPattern: RepsPattern
     fixedReps?: number
+    pyramidDirection?: PyramidDirection
+    pyramidStartRep?: number
   }) => void
   onCancel: () => void
 }
@@ -31,6 +33,12 @@ export default function ProgramForm({
     program?.defaultRepsPattern || 'pyramid'
   )
   const [fixedReps, setFixedReps] = useState(program?.fixedReps?.toString() || '')
+  const [pyramidDirection, setPyramidDirection] = useState<PyramidDirection>(
+    program?.pyramidDirection || 'both'
+  )
+  const [pyramidStartRep, setPyramidStartRep] = useState(
+    program?.pyramidStartRep?.toString() || '1'
+  )
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   const validate = (): boolean => {
@@ -71,6 +79,12 @@ export default function ProgramForm({
         fixedReps:
           defaultRepsPattern === 'fixed' && fixedReps
             ? Number(fixedReps)
+            : undefined,
+        pyramidDirection:
+          defaultRepsPattern === 'pyramid' ? pyramidDirection : undefined,
+        pyramidStartRep:
+          defaultRepsPattern === 'pyramid' && pyramidStartRep
+            ? Number(pyramidStartRep)
             : undefined,
       })
     }
@@ -123,6 +137,29 @@ export default function ProgramForm({
           placeholder="Ex: 10"
           min="1"
         />
+      )}
+
+      {defaultRepsPattern === 'pyramid' && (
+        <>
+          <Select
+            label="Direction de la pyramide"
+            options={[
+              { value: 'both', label: 'Montee + Descente' },
+              { value: 'ascending', label: 'Montee seulement' },
+              { value: 'descending', label: 'Descente seulement' },
+            ]}
+            value={pyramidDirection}
+            onChange={(e) => setPyramidDirection(e.target.value as PyramidDirection)}
+          />
+          <Input
+            label="Repetition de depart"
+            type="number"
+            value={pyramidStartRep}
+            onChange={(e) => setPyramidStartRep(e.target.value)}
+            placeholder="1"
+            min="1"
+          />
+        </>
       )}
 
       <Input
