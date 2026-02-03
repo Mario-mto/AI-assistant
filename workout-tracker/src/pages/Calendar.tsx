@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import Card from '../components/ui/Card'
 import MonthView from '../components/calendar/MonthView'
+import WeekView from '../components/calendar/WeekView'
 
 type ViewMode = 'month' | 'week'
 
@@ -128,9 +129,7 @@ export default function Calendar() {
         {viewMode === 'month' ? (
           <MonthView currentDate={currentDate} onDateClick={handleDateClick} />
         ) : (
-          <p className="text-center text-gray-500 py-8">
-            Vue hebdomadaire (prochainement)
-          </p>
+          <WeekView currentDate={currentDate} onDateClick={handleDateClick} />
         )}
       </Card>
 
