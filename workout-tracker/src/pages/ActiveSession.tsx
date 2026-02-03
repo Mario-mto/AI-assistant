@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useWorkout } from '../context/WorkoutContext'
 import { getDefaultReps, generatePyramidPattern, getPyramidTotalSets } from '../utils/defaultReps'
 import type { PyramidDirection } from '../types'
@@ -19,10 +19,20 @@ type SessionState = 'setup' | 'active' | 'resting'
 
 export default function ActiveSession() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const { exercises, programs, addSession, getLastSession } = useWorkout()
 
-  const [selectedExerciseId, setSelectedExerciseId] = useState('')
-  const [selectedProgramId, setSelectedProgramId] = useState('')
+  // Read query params for pre-filling from calendar
+  const queryExerciseId = searchParams.get('exerciseId')
+  const queryProgramId = searchParams.get('programId')
+
+  // Initialize with query params if valid, otherwise empty
+  const [selectedExerciseId, setSelectedExerciseId] = useState(() =>
+    queryExerciseId && exercises.some(e => e.id === queryExerciseId) ? queryExerciseId : ''
+  )
+  const [selectedProgramId, setSelectedProgramId] = useState(() =>
+    queryProgramId && programs.some(p => p.id === queryProgramId) ? queryProgramId : ''
+  )
   const [sessionState, setSessionState] = useState<SessionState>('setup')
   const [completedSets, setCompletedSets] = useState<number[]>([])
   const [currentSetIndex, setCurrentSetIndex] = useState(0)
