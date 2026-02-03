@@ -8,6 +8,7 @@ const ActiveSession = lazy(() => import('./pages/ActiveSession'))
 const Cardio = lazy(() => import('./pages/Cardio'))
 const History = lazy(() => import('./pages/History'))
 const Config = lazy(() => import('./pages/Config'))
+const Calendar = lazy(() => import('./pages/Calendar'))
 
 // Fallback de loading minimal
 const PageLoader = () => (
@@ -24,6 +25,7 @@ function App() {
           <Route path="/" element={<Layout />}>
             <Route index element={<Dashboard />} />
             <Route path="session" element={<ActiveSession />} />
+            <Route path="calendar" element={<Calendar />} />
             <Route path="cardio" element={<Cardio />} />
             <Route path="history" element={<History />} />
             <Route path="config" element={<Config />} />
