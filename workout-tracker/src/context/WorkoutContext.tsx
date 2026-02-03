@@ -1,9 +1,10 @@
 import { createContext, useContext, useMemo, useCallback } from 'react'
 import type { ReactNode } from 'react'
 import { useLocalStorage } from '../hooks/useLocalStorage'
-import type { Exercise, Program, Session, CardioSession } from '../types'
+import type { Exercise, Program, Session, CardioSession, PlannedSession } from '../types'
 import { generateId } from '../utils/id'
 import { getCurrentDate } from '../utils/date'
+import { expandRecurringSessions } from '../utils/recurrence'
 
 /**
  * Shape du contexte Workout
@@ -36,6 +37,14 @@ type WorkoutContextType = {
   addCardioSession: (session: Omit<CardioSession, 'id' | 'date'>) => void
   deleteCardioSession: (id: string) => void
 
+  // Planned Sessions
+  plannedSessions: PlannedSession[]
+  addPlannedSession: (session: Omit<PlannedSession, 'id'>) => void
+  updatePlannedSession: (id: string, updates: Partial<Omit<PlannedSession, 'id'>>) => void
+  deletePlannedSession: (id: string, deleteAll?: boolean) => void
+  excludeDateFromRecurrence: (id: string, date: string) => void
+  getPlannedSessionsForRange: (startDate: string, endDate: string) => PlannedSession[]
+
   // Helpers
   getSessionsByExercise: (exerciseId: string) => Session[]
   getLastSession: (exerciseId: string, programId: string) => Session | undefined
@@ -55,6 +64,7 @@ export function WorkoutProvider({ children }: { children: ReactNode }) {
   const [programs, setPrograms] = useLocalStorage<Program[]>('programs', [])
   const [sessions, setSessions] = useLocalStorage<Session[]>('sessions', [])
   const [cardioSessions, setCardioSessions] = useLocalStorage<CardioSession[]>('cardioSessions', [])
+  const [plannedSessions, setPlannedSessions] = useLocalStorage<PlannedSession[]>('plannedSessions', [])
 
   // ========== EXERCISES ==========
 
@@ -138,6 +148,46 @@ export function WorkoutProvider({ children }: { children: ReactNode }) {
     setCardioSessions((prev) => prev.filter((s) => s.id !== id))
   }, [setCardioSessions])
 
+  // ========== PLANNED SESSIONS ==========
+
+  const addPlannedSession = useCallback((session: Omit<PlannedSession, 'id'>) => {
+    const newSession: PlannedSession = {
+      ...session,
+      id: generateId(),
+    }
+    setPlannedSessions((prev) => [...prev, newSession])
+  }, [setPlannedSessions])
+
+  const updatePlannedSession = useCallback((id: string, updates: Partial<Omit<PlannedSession, 'id'>>) => {
+    setPlannedSessions((prev) =>
+      prev.map((s) => (s.id === id ? { ...s, ...updates } : s))
+    )
+  }, [setPlannedSessions])
+
+  const deletePlannedSession = useCallback((id: string, deleteAll = true) => {
+    if (deleteAll) {
+      setPlannedSessions((prev) => prev.filter((s) => s.id !== id && s.parentId !== id))
+    } else {
+      setPlannedSessions((prev) => prev.filter((s) => s.id !== id))
+    }
+  }, [setPlannedSessions])
+
+  const excludeDateFromRecurrence = useCallback((id: string, date: string) => {
+    setPlannedSessions((prev) =>
+      prev.map((s) => {
+        if (s.id === id) {
+          const excludedDates = [...(s.excludedDates || []), date]
+          return { ...s, excludedDates }
+        }
+        return s
+      })
+    )
+  }, [setPlannedSessions])
+
+  const getPlannedSessionsForRange = useCallback((startDate: string, endDate: string): PlannedSession[] => {
+    return expandRecurringSessions(plannedSessions, startDate, endDate)
+  }, [plannedSessions])
+
   // ========== HELPERS ==========
 
   const getSessionsByExercise = useCallback((exerciseId: string): Session[] => {
@@ -165,9 +215,10 @@ export function WorkoutProvider({ children }: { children: ReactNode }) {
       programs,
       sessions,
       cardioSessions,
+      plannedSessions,
     }
     return JSON.stringify(data, null, 2)
-  }, [exercises, programs, sessions, cardioSessions])
+  }, [exercises, programs, sessions, cardioSessions, plannedSessions])
 
   const importData = useCallback((jsonString: string): boolean => {
     try {
@@ -176,17 +227,19 @@ export function WorkoutProvider({ children }: { children: ReactNode }) {
       if (data.programs) setPrograms(data.programs)
       if (data.sessions) setSessions(data.sessions)
       if (data.cardioSessions) setCardioSessions(data.cardioSessions)
+      if (data.plannedSessions) setPlannedSessions(data.plannedSessions)
       return true
     } catch {
       return false
     }
-  }, [setExercises, setPrograms, setSessions, setCardioSessions])
+  }, [setExercises, setPrograms, setSessions, setCardioSessions, setPlannedSessions])
 
   const value = useMemo<WorkoutContextType>(() => ({
     exercises,
     programs,
     sessions,
     cardioSessions,
+    plannedSessions,
     addExercise,
     updateExercise,
     deleteExercise,
@@ -200,6 +253,11 @@ export function WorkoutProvider({ children }: { children: ReactNode }) {
     getSession,
     addCardioSession,
     deleteCardioSession,
+    addPlannedSession,
+    updatePlannedSession,
+    deletePlannedSession,
+    excludeDateFromRecurrence,
+    getPlannedSessionsForRange,
     getSessionsByExercise,
     getLastSession,
     exportData,
@@ -209,6 +267,7 @@ export function WorkoutProvider({ children }: { children: ReactNode }) {
     programs,
     sessions,
     cardioSessions,
+    plannedSessions,
     addExercise,
     updateExercise,
     deleteExercise,
@@ -222,6 +281,11 @@ export function WorkoutProvider({ children }: { children: ReactNode }) {
     getSession,
     addCardioSession,
     deleteCardioSession,
+    addPlannedSession,
+    updatePlannedSession,
+    deletePlannedSession,
+    excludeDateFromRecurrence,
+    getPlannedSessionsForRange,
     getSessionsByExercise,
     getLastSession,
     exportData,
