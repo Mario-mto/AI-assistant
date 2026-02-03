@@ -1,14 +1,19 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import Card from '../components/ui/Card'
 import MonthView from '../components/calendar/MonthView'
 import WeekView from '../components/calendar/WeekView'
+import SessionModal from '../components/calendar/SessionModal'
+import { useWorkout } from '../context/WorkoutContext'
+import { getSessionsForDate } from '../utils/recurrence'
 
 type ViewMode = 'month' | 'week'
 
 export default function Calendar() {
+  const { sessions, plannedSessions } = useWorkout()
   const [viewMode, setViewMode] = useState<ViewMode>('month')
   const [currentDate, setCurrentDate] = useState(new Date())
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
 
   const navigatePrevious = () => {
     setCurrentDate(prev => {
@@ -40,9 +45,15 @@ export default function Calendar() {
 
   const handleDateClick = (date: string) => {
     setSelectedDate(date)
-    // TODO: Open SessionModal for this date
-    console.log('Selected date:', date)
+    setIsModalOpen(true)
   }
+
+  const selectedDateSessions = useMemo(() => {
+    if (!selectedDate) return { completed: [], planned: [] }
+    const completed = sessions.filter(s => s.date === selectedDate)
+    const planned = getSessionsForDate(plannedSessions, selectedDate)
+    return { completed, planned }
+  }, [selectedDate, sessions, plannedSessions])
 
   const formatHeader = () => {
     if (viewMode === 'month') {
@@ -149,11 +160,15 @@ export default function Calendar() {
         </div>
       </div>
 
-      {/* Debug selected date */}
+      {/* Session Modal */}
       {selectedDate && (
-        <p className="text-center text-gray-400 text-sm mt-4">
-          Date selectionnee: {selectedDate}
-        </p>
+        <SessionModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          date={selectedDate}
+          completedSessions={selectedDateSessions.completed}
+          plannedSessions={selectedDateSessions.planned}
+        />
       )}
     </div>
   )
