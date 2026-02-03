@@ -113,7 +113,7 @@ export default function WeekView({ currentDate, onDateClick }: WeekViewProps) {
                   >
                     <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                     <span>{getExerciseName(session.exerciseId)}</span>
-                    <span className="text-gray-400">- {session.totalReps} reps</span>
+                    <span className="text-gray-400">- {session.sets.reduce((a, b) => a + b, 0)} reps</span>
                   </div>
                 ))}
                 {planned.slice(0, 2).map((session) => (
